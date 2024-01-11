@@ -1,0 +1,12 @@
+.day_circle{
+    display: flex;
+    justify-content: center;
+    background-color: var(--ion-color-light);
+    border-radius: 50%;
+    align-items: center;
+    margin: 0 0.2rem 0.5rem;
+    aspect-ratio: 1/1;
+}
+.day_circle.today{
+    background-color: var(--ion-color-primary) !important;
+}
