@@ -1,4 +1,4 @@
-import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToolbar, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent } from '@ionic/react';
+import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab1.css';
 import { add, reload, remove, timeOutline } from 'ionicons/icons';
@@ -117,7 +117,44 @@ interface ActivityProps {
 }
 
 const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) => {
-  return <IonItemSliding onClick={e=>{
+  const [poms_done, setPomsDone] = useState<number>(activityData.d_done);
+  const {serverURL} = useServer();
+  async function ChangeDoneCount(e: ItemSlidingCustomEvent){
+    var value = await e.target.getSlidingRatio();
+    //If value == 1, then the user is subtracting from the count
+    //If value == -1, then the user is adding to the count
+    if(value > 1){
+      if (poms_done > 0){
+        setPomsDone(poms_done - 1);
+      }
+      e.target.close();
+    }
+    else if (value <= -1){
+      if (poms_done < activityData.d_poms)
+        setPomsDone(poms_done + 1);
+      e.target.close();
+    }
+  }
+  useEffect(() => {
+    if(poms_done != activityData.d_done){
+      //Send updated done count to server
+      fetch(serverURL + '/change_done', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          d_or_w: true,
+          id: activityData.id,
+          value: poms_done,
+          override_key: ""
+        })
+      })
+    }
+  }, [poms_done]);
+  return <IonItemSliding 
+  onIonDrag={ChangeDoneCount}
+  onClick={e=>{
     e.preventDefault();
     if (onClick) onClick(activityData);
   }}>
@@ -129,7 +166,7 @@ const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) 
 
          <IonItem id="update-modal-trigger">
           <IonLabel slot='start'>{activityData.name}</IonLabel>
-          <IonChip slot='end' color='primary'>{activityData.d_done} / {activityData.d_poms}</IonChip>
+          <IonChip slot='end' color='primary'>{poms_done} / {activityData.d_poms}</IonChip>
         </IonItem>
 
         <IonItemOptions side="end">
