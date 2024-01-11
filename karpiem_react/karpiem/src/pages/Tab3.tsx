@@ -52,19 +52,19 @@ const Tab3: React.FC = () => {
         <IonLabel slot='start'>Week Max</IonLabel>
         <IonInput aria-label='max-poms-week' slot='end'type="number" value={88}></IonInput>
       </IonItem>
-          <IonButton expand='block' onClick={e=>{
+          <IonButton shape='round' expand='block' onClick={e=>{
             e.preventDefault();
             resetDayCounts();
           }}>
-            <IonIcon icon={playSkipBackCircle} />
-            Reset Day Counts
+            <IonIcon slot='start' icon={playSkipBackCircle} />
+            <IonLabel slot='end'>Reset Day Counts</IonLabel>
           </IonButton>
-          <IonButton expand='block' onClick={e=>{
+          <IonButton shape='round' expand='block' onClick={e=>{
             e.preventDefault();
             resetWeekCounts();
           }}>
-            <IonIcon icon={playBackCircle} />
-            Reset Week Counts
+            <IonIcon slot='start' icon={playBackCircle} />
+            <IonLabel slot='end'>Reset Week Counts</IonLabel>
           </IonButton>
         </IonList>
       </IonContent>

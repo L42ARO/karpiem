@@ -1,7 +1,7 @@
 import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab1.css';
-import { add, reload, remove, timeOutline } from 'ionicons/icons';
+import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useServer } from '../context/serverContext';
 
@@ -11,6 +11,7 @@ interface DayActivityResponse{
   d_poms: number;
   d_done: number;
   full: boolean;
+  focus: boolean;
 }
 interface DayActivitiesResponse{
   dailies: DayActivityResponse[];
@@ -118,23 +119,60 @@ interface ActivityProps {
 
 const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) => {
   const [poms_done, setPomsDone] = useState<number>(activityData.d_done);
+  const [last_slide, setLastSlide] = useState<number>(0);
   const {serverURL} = useServer();
+  const slider = useRef<HTMLIonItemSlidingElement>(null);
   async function ChangeDoneCount(e: ItemSlidingCustomEvent){
     var value = await e.target.getSlidingRatio();
     //If value == 1, then the user is subtracting from the count
     //If value == -1, then the user is adding to the count
-    if(value > 1){
-      if (poms_done > 0){
-        setPomsDone(poms_done - 1);
-      }
-      e.target.close();
-    }
-    else if (value <= -1){
-      if (poms_done < activityData.d_poms)
-        setPomsDone(poms_done + 1);
-      e.target.close();
-    }
+    //if(value > 1){
+    //  if (poms_done > 0){
+    //    setPomsDone(poms_done - 1);
+    //  }
+    //  e.target.close();
+    //}
+    //else if (value < -3){
+    //  if (poms_done < activityData.d_poms)
+    //    setPomsDone(poms_done + 1);
+    //  e.target.close();
+    //}
   }
+  function ModifyDoneCount(n: number){
+    if ((n<0 && poms_done> 0) || (n>0 && !activityData.full)){
+      setPomsDone(poms_done + n);
+    }
+    slider.current?.close();
+  }
+  async function FocusActivity(){
+    var focus = !activityData.focus;
+    var res = await fetch(serverURL + '/focus_activity', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id: activityData.id,
+        focus: focus
+      })
+    })
+    if (res.ok){
+      const data: DayActivityResponse = await res.json();
+      console.log(data);
+    }
+    else if(res.status == 400){ //Bad request
+      //Try to get the json data
+      try{
+        const data = await res.json();
+        console.log(data);
+      }
+      catch(error){
+        console.log(error);
+      }
+    }
+    slider.current?.close();
+  }
+
   useEffect(() => {
     if(poms_done != activityData.d_done){
       //Send updated done count to server
@@ -153,24 +191,28 @@ const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) 
     }
   }, [poms_done]);
   return <IonItemSliding 
-  onIonDrag={ChangeDoneCount}
+  ref={slider}
   onClick={e=>{
     e.preventDefault();
     if (onClick) onClick(activityData);
   }}>
-        <IonItemOptions side="start">
-          <IonItemOption color="success">
+        <IonItemOptions side="start" onIonSwipe={e=>ModifyDoneCount(1)}>
+          <IonItemOption color="success" expandable onClick={e=>ModifyDoneCount(1)}>
             <IonIcon icon={add}/>
+          </IonItemOption>
+          <IonItemOption color="primary"  onClick={e=>FocusActivity()}>
+            <IonIcon slot="top" icon={`${activityData.focus?stop:play}`}/>
+            {activityData.focus ? "Unfocus":"Focus"}
           </IonItemOption>
         </IonItemOptions>
 
-         <IonItem id="update-modal-trigger">
+         <IonItem id="update-modal-trigger" color={activityData.focus ? "primary":activityData.full ? "danger":""}>
           <IonLabel slot='start'>{activityData.name}</IonLabel>
-          <IonChip slot='end' color='primary'>{poms_done} / {activityData.d_poms}</IonChip>
+          <IonChip slot='end' color={activityData.focus ? "dark": activityData.full?"dark":"primary"}>{activityData.d_done} / {activityData.d_poms}</IonChip>
         </IonItem>
 
-        <IonItemOptions side="end">
-          <IonItemOption color="danger">
+        <IonItemOptions side="end" onIonSwipe={e=>ModifyDoneCount(-1)}>
+          <IonItemOption color="danger" expandable onClick={e=>ModifyDoneCount(-1)}>
             <IonIcon icon={remove}/>
           </IonItemOption>
         </IonItemOptions>

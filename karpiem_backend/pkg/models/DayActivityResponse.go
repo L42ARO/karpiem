@@ -7,6 +7,7 @@ type DayActivityResponse struct {
 	DPoms	int64 	`json:"d_poms"`
 	DDone	int64 	`json:"d_done"`
 	Full 	bool  	`json:"full"`
+	Focus 	bool  	`json:"focus"`
 }
 
 type DayAcitivitiesResponse struct {

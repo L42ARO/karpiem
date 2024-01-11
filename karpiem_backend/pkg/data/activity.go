@@ -14,5 +14,6 @@ type Activity struct {
 	DDone       int64
 	WDone       int64
 	LastUpdate  time.Time
+	Focus       bool
 }
 

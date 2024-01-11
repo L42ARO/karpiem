@@ -102,8 +102,8 @@ func GetDayActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 	var totalDone int64
 	// Sort the response list by the Done field (false first)
 	sort.Slice(activities, func(i, j int) bool {
-		full_i := activities[i].DDone >= activities[i].DPoms
-		full_j := activities[j].DDone >= activities[j].DPoms
+		full_i := activities[i].DDone >= activities[i].DPoms || activities[i].WDone >= activities[i].WPoms
+		full_j := activities[j].DDone >= activities[j].DPoms || activities[j].WDone >= activities[j].WPoms
 		return !full_i && full_j
 	})
 	
@@ -117,7 +117,8 @@ func GetDayActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 			Name:  activity.Name,
 			DPoms: activity.DPoms,
 			DDone: activity.DDone,
-			Full:  activity.DDone >= activity.DPoms,
+			Full:  activity.DDone >= activity.DPoms || activity.WDone >= activity.WPoms,
+			Focus: activity.Focus,
 		}
 		//Dailies are the ones whose WPoms = 7 * DPoms
 		if activity.WPoms == 7 * activity.DPoms {
@@ -245,6 +246,7 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 	if newWDone > activity.WPoms || newDDone > activity.DPoms {
 		// Check override key
 		if request.OverrideKey != "1234" {
+			//Print out all the values for debugging
 			http.Error(w, "Invalid override key", http.StatusUnauthorized)
 			return
 		}
@@ -384,4 +386,48 @@ func UpdateActivityHandler(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(activity)
 
+}
+
+func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
+	var request models.FocusRequest
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&request); err != nil{
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	db := data.GetDB()
+	var activity data.Activity
+	result := db.Where("id = ?", request.ID).First(&activity)
+	if result.Error != nil {
+		http.Error(w, "Activity not found", http.StatusNotFound)
+		return
+	}
+	if request.Focus{
+		var other_focus data.Activity
+		result := db.Where("focus = ?", true).First(&other_focus)
+		if result.Error != nil && result.Error.Error() != "record not found" {
+			http.Error(w, "Error checking for focus", http.StatusNotFound)
+			return
+		}
+		if result.RowsAffected != 0{
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(other_focus)
+			return
+		}
+
+	}
+
+	activity.Focus = request.Focus
+	result = db.Save(&activity)
+	if result.Error != nil {
+		http.Error(w, "Failed to update activity", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(activity)
 }
