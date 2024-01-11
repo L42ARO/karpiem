@@ -1,0 +1,5 @@
+ngrok-v3-stable-windows-amd64.zip
+ngrok.exe
+karpiem_backend/tmp
+karpiem_backend/*.exe
+karpiem_backend/.env

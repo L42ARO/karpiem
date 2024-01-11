@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+</head>
+<body>
+    <h1>Welcome to the Admin Page</h1>
+    <p>This is a test page for the admin route.</p>
+    <div>
+        <h2>Add Activity</h2>
+        <form id="activityForm">
+            <label for="daily">Daily:</label>
+            <input type="checkbox" id="daily" name="daily">
+
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+
+            <label for="poms">Poms:</label>
+            <input type="number" id="poms" name="poms">
+
+            <label for="max">Max:</label>
+            <input type="number" id="max" name="max">
+
+            <label for="days">Days:</label>
+            <input type="text" id="days" name="days">
+
+            <!-- Button to test AddActivityHandler -->
+            <button type="button" onclick="testAddActivityHandler()">Test AddActivityHandler</button>
+        </form>
+    </div>
+    <div>
+        <h2>Update Activity</h2>
+        <form id="updateActivityForm">
+            <label for="update_active">Active:</label>
+            <input type="checkbox" id="update_active" name="update_active">
+
+            <label for="update_id">ID:</label>
+            <input type="text" id="update_id" name="update_id">
+
+            <label for="update_daily">Daily:</label>
+            <input type="checkbox" id="update_daily" name="update_daily">
+
+            <label for="name">Name:</label>
+            <input type="text" id="update_name" name="update_name">
+
+            <label for="poms">Poms:</label>
+            <input type="number" id="update_poms" name="update_poms">
+
+            <label for="max">Max:</label>
+            <input type="number" id="update_max" name="update_max">
+
+            <label for="days">Days:</label>
+            <input type="text" id="update_days" name="update_days">
+
+            <!-- Button to test AddActivityHandler -->
+            <button type="button" onclick="testUpdateActivityHandler()">Test UpdateActivityHandler</button>
+        </form>
+    </div>
+    <!-- New div for displaying day activities -->
+    <div id="dayActivitiesDiv">
+        <h2>Day Activities</h2>
+        <button type="button" onclick="getDayActivities()">Get Day Activities</button>
+        <h3 id="d_done_total"></h3>
+        <h4>Dailies</h4>
+        <ul id="dayActivitiesDailiesList"></ul>
+        <h4>Options</h4>
+        <ul id="dayActivitiesWeekliesList"></ul>
+    </div>
+    <div id="weekActivitiesDiv">
+        <h2>Week Activities</h2>
+        <button type="button" onclick="getWeekActivities()">Get Week Activities</button>
+        <h3 id="w_done_total"></h3>
+        <h4>Dailies</h4>
+        <ul id="weekActivitiesDailiesList"></ul>
+        <h4>Weeklies</h4>
+        <ul id="weekActivitiesWeekliesList"></ul>
+    </div>
+    <!-- New section for changing activity's d_done and w_done values -->
+    <div id="changeDoneSection">
+        <h2>Change Done Value</h2>
+        <label for="id">ID:</label>
+        <input type="text" id="id" name="id">
+
+        <label for="newValue">New Value:</label>
+        <input type="number" id="newValue" name="newValue">
+
+        <label for="dOrW">DOrW:</label>
+        <input type="checkbox" id="dOrW" name="dOrW">
+
+        <label for="overrideKey">Override Key:</label>
+        <input type="text" id="overrideKey" name="overrideKey">
+
+        <button type="button" onclick="changeDoneValue()">Change Done Value</button>
+    </div>
+
+    <div>
+        <h2>Reset tests</h2>
+        <button type="button" onclick="resetDayActivities()">Reset Day Activities</button>
+        <button type="button" onclick="resetWeekActivities()">Reset Week Activities</button>
+    </div>
+    
+    <div>
+        <h2>Delete test</h2>
+        <input type="text" id="deleteId" name="deleteId">
+        <button type="button" onclick="deleteActivity()">Delete Activity</button>
+    </div>
+
+    <script>
+        //Get server url from document
+        
+        var url = ""
+        const domain = document.domain;
+        if (domain === "localhost") {
+            url = "http://localhost:8080"
+        } else {
+            url = "wss://threepio-carrt.up.railway.app/ws"
+        }
+        // Function to save the last typed value in local storage
+        function saveLastTypedValue(inputId) {
+            const inputValue = document.getElementById(inputId).value;
+            localStorage.setItem(inputId, inputValue);
+        }
+
+        // Function to load the last typed value from local storage
+        function loadLastTypedValue(inputId) {
+            const savedValue = localStorage.getItem(inputId);
+            if (savedValue) {
+                document.getElementById(inputId).value = savedValue;
+            }
+        }
+
+        // Load last typed values when the page is loaded
+        window.onload = function () {
+            loadLastTypedValue('daily');
+            loadLastTypedValue('name');
+            loadLastTypedValue('poms');
+            loadLastTypedValue('max');
+            loadLastTypedValue('days');
+        };
+
+        function testAddActivityHandler() {
+            // Sample JSON payload
+            var payload = {
+                "daily": document.getElementById("daily").checked,
+                "name": document.getElementById("name").value,
+                "poms": parseInt(document.getElementById("poms").value),
+                "max": parseInt(document.getElementById("max").value),
+                "days": document.getElementById("days").value
+            };
+
+            // Save the last typed values
+            saveLastTypedValue('daily');
+            saveLastTypedValue('name');
+            saveLastTypedValue('poms');
+            saveLastTypedValue('max');
+            saveLastTypedValue('days');
+
+            // Make a POST request to AddActivityHandler
+            fetch(url+'/add_activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        function getWeekActivities(){
+            fetch(url + '/week_activities')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data=>{
+                console.log('Week Activities:', data);
+                var dailiesList = document.getElementById("weekActivitiesDailiesList");
+                var weekliesList = document.getElementById("weekActivitiesWeekliesList");
+                dailiesList.innerHTML = ""; // Clear previous list items
+                weekliesList.innerHTML = ""; // Clear previous list items
+                var totalLabel = document.getElementById("w_done_total");
+                totalLabel.innerHTML = `Total: ${data.total_done} / ${data.total_poms}`;
+                data.dailies.forEach(activity => {
+                    var listItem = document.createElement("li");
+                    listItem.textContent = `ID: ${activity.id}, Name: ${activity.name}, WPoms: ${activity.w_poms}, WDone: ${activity.w_done}, Full: ${activity.full}`;
+                    dailiesList.appendChild(listItem);
+                });
+                data.weeklies.forEach(activity =>{
+                    var listItem = document.createElement("li")
+                    listItem.textContent = `ID: ${activity.id}, Name: ${activity.name}, WPoms: ${activity.w_poms}, WDone: ${activity.w_done}, Full: ${activity.full}`;
+                    weekliesList.appendChild(listItem);
+                })
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        function getDayActivities() {
+            // Make a GET request to the DayActivities endpoint
+            fetch(url + '/day_activities')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Day Activities:', data);
+
+                // Display the day activities as a list
+                var dailiesList = document.getElementById("dayActivitiesDailiesList");
+                var weekliesList = document.getElementById("dayActivitiesWeekliesList");
+                dailiesList.innerHTML = ""; // Clear previous list items
+                weekliesList.innerHTML = ""; // Clear previous list items
+
+                var totalLabel = document.getElementById("d_done_total");
+                totalLabel.innerHTML = `Total: ${data.total_done} / ${data.total_poms}`;
+                data.dailies.forEach(activity => {
+                    var listItem = document.createElement("li");
+                    listItem.textContent = `ID: ${activity.id}, Name: ${activity.name}, DPoms: ${activity.d_poms}, DDone: ${activity.d_done}, Full: ${activity.full}`;
+                    dailiesList.appendChild(listItem);
+                });
+                data.options.forEach(activity => {
+                    var listItem = document.createElement("li");
+                    listItem.textContent = `ID: ${activity.id}, Name: ${activity.name}, DPoms: ${activity.d_poms}, DDone: ${activity.d_done}, Full: ${activity.full}`;
+                    weekliesList.appendChild(listItem);
+                });
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+        function changeDoneValue() {
+            // Sample JSON payload for changing done value
+            var donePayload = {
+                "d_or_w": document.getElementById("dOrW").checked,
+                "id": document.getElementById("id").value,
+                "value": parseInt(document.getElementById("newValue").value),
+                "override_key": document.getElementById("overrideKey").value
+            };
+
+            // Make a POST request to ChangeDoneHandler
+            fetch(url + '/change_done', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(donePayload),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        function resetDayActivities(){
+            fetch(url + '/reset_day')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return "Success";
+            })
+            .then(data=>{
+                console.log('Reset Day Activities:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        function resetWeekActivities(){
+            fetch(url + '/reset_week')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return "Success";
+            })
+            .then(data=>{
+                console.log('Reset Week Activities:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        function deleteActivity(){
+            fetch(url + '/delete_activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({"id": document.getElementById("deleteId").value}),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return "Success";
+            })
+            .then(data=>{
+                console.log('Delete Activity:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        function testUpdateActivityHandler(){
+            fetch(url + '/update_activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "id": document.getElementById("update_id").value,
+                    "active": document.getElementById("update_active").checked,
+                    "daily": document.getElementById("update_daily").checked,
+                    "name": document.getElementById("update_name").value,
+                    "poms": parseInt(document.getElementById("update_poms").value),
+                    "max": parseInt(document.getElementById("update_max").value),
+                    "days": document.getElementById("update_days").value
+                }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data=>{
+                console.log('Update Activity:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

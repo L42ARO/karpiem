@@ -1,0 +1,7 @@
+{
+  "name": "Karpiem",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
