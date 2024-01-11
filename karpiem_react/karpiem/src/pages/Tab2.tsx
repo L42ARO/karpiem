@@ -1,7 +1,7 @@
-import { IonButton, IonCard, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonItem, IonLabel, IonPage, IonRefresher, IonRefresherContent, IonRow, IonTitle, IonToolbar, RefresherEventDetail } from '@ionic/react';
+import { IonButton, IonCard, IonCardContent, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonRefresher, IonRefresherContent, IonRow, IonTitle, IonToolbar, RefresherEventDetail } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab2.css';
-import { add, reload, timeOutline } from 'ionicons/icons';
+import { add, reload, remove, timeOutline } from 'ionicons/icons';
 import { useEffect, useState } from 'react';
 import { useServer } from '../context/serverContext';
 
@@ -83,9 +83,66 @@ const Tab2: React.FC = () => {
             </IonCol>
           </IonRow>
         </IonGrid>
+        <IonCard >
+        <IonHeader>
+          <IonToolbar>
+            <IonTitle>Today</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+          <IonCardContent className='ion-no-padding'>
+            <IonList>
+              {weekActivitiesResponse?.dailies.map((activity, i) => (
+                <Activity key={activity.id} activityData={activity}/>
+              ))}
+            </IonList>
+          </IonCardContent>
+        </IonCard>
+        <IonCard>
+          <IonHeader>
+          <IonToolbar>
+            <IonTitle>Options</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+          <IonCardContent className='ion-no-padding'>
+        <IonList>
+          {weekActivitiesResponse?.weeklies.map((activity, i) => (
+            <Activity key={activity.id} activityData={activity}/>
+          ))}
+        </IonList>
+</IonCardContent>
+        </IonCard>
       </IonContent>
     </IonPage>
   );
 };
+
+interface ActivityProps {
+  activityData: WeekActivityResponse;
+  onClick?: (activity: WeekActivityResponse)=>void;
+}
+
+const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) => {
+  return <IonItemSliding onClick={e=>{
+    e.preventDefault();
+    if (onClick) onClick(activityData);
+  }}>
+        <IonItemOptions side="start">
+          <IonItemOption color="success">
+            <IonIcon icon={add}/>
+          </IonItemOption>
+        </IonItemOptions>
+
+         <IonItem id="update-modal-trigger">
+          <IonLabel slot='start'>{activityData.name}</IonLabel>
+          <IonChip slot='end' color='primary'>{activityData.w_done} / {activityData.w_poms}</IonChip>
+        </IonItem>
+
+        <IonItemOptions side="end">
+          <IonItemOption color="danger">
+            <IonIcon icon={remove}/>
+          </IonItemOption>
+        </IonItemOptions>
+      </IonItemSliding>
+}
 
 export default Tab2;
