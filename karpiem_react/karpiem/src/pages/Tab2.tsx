@@ -1,6 +1,7 @@
 import { IonButton, IonCard, IonCardContent, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonRefresher, IonRefresherContent, IonRow, IonTitle, IonToolbar, RefresherEventDetail } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab2.css';
+import '../theme/custom_global.css'
 import { add, reload, remove, timeOutline } from 'ionicons/icons';
 import { useEffect, useState } from 'react';
 import { useServer } from '../context/serverContext';
@@ -110,8 +111,8 @@ const Tab2: React.FC = () => {
         </IonGrid>
         <IonCard >
         <IonHeader>
-          <IonToolbar>
-            <IonTitle>Today</IonTitle>
+          <IonToolbar className='gradient-header'>
+            <IonTitle>Dailies</IonTitle>
           </IonToolbar>
         </IonHeader>
           <IonCardContent className='ion-no-padding'>
@@ -124,8 +125,8 @@ const Tab2: React.FC = () => {
         </IonCard>
         <IonCard>
           <IonHeader>
-          <IonToolbar>
-            <IonTitle>Options</IonTitle>
+          <IonToolbar className='gradient-header'>
+            <IonTitle>Weeklies</IonTitle>
           </IonToolbar>
         </IonHeader>
           <IonCardContent className='ion-no-padding'>

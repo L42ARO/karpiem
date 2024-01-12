@@ -1,0 +1,38 @@
+:root {
+  --light-mode-background: #fff; /* Set your light mode background color */
+  --dark-mode-background: #000; /* Set your dark mode background color */
+}
+
+ion-toolbar.gradient-header {
+  --ion-toolbar-background: rgba(0,0,0,0);
+  background-image: linear-gradient(to right, #103, #000 30%, #000 70%, #103) !important;
+  background-size: 200% 100%;
+  animation: gradientAnimation 5s ease-in infinite; /* Adjust the duration and easing as needed */
+}
+
+ion-toolbar.gradient-header-dark {
+  --ion-toolbar-background: rgba(0,0,0,0);
+  background-image: linear-gradient(to right, #000, #103, #000) !important;
+  background-size: 200% 100%;
+  animation: gradientAnimation 3s ease-in-out infinite; /* Adjust the duration and easing as needed */
+}
+
+/* Add a media query to switch styles for light mode */
+@media (prefers-color-scheme: light) {
+  ion-toolbar.gradient-header {
+    background-image: linear-gradient(to right, #def, #fff, #def) !important;
+  }
+
+  ion-toolbar.gradient-header-dark {
+    background-image: linear-gradient(to right, #dcf, #fff, #dcf) !important;
+  }
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}

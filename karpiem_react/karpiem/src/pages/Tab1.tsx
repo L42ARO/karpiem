@@ -1,6 +1,7 @@
 import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab1.css';
+import '../theme/custom_global.css';
 import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useServer } from '../context/serverContext';
@@ -74,6 +75,15 @@ const Tab1: React.FC = () => {
             return updatedResponse;
           });
 
+      }
+      if (key === "SINGLE_NEW"){
+        console.log("NEW:",value);
+      }
+      if(key === "SINGLE_DELETE"){
+        console.log("DELETE:",value);
+      }
+      if(key === "BATCH_RESET"){
+        console.log("RESETING:",value);
       }
 
     }else{
@@ -369,7 +379,8 @@ const ActivityEditorModal:React.FC<ActivityEditorModalProps>= ({trigger, newActi
       max: maxDaily,
       poms: poms,
       days: days,
-      daily: activityType === 'daily'
+      daily: activityType === 'daily',
+      room_id: "123456789"
     }
     //Send the data to the server
     fetch(serverURL + '/add_activity', {

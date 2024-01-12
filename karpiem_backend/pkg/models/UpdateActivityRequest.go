@@ -8,4 +8,5 @@ type UpdateActivityRequest struct {
 	Days 	string `json:"days"`
 	Poms	int64  `json:"poms"`
 	Max		int64  `json:"max"`
+	RoomID	string `json:"room_id"`
 }

@@ -49,6 +49,23 @@ func AddActivityHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Broadcast the change to all the clients in the room
+	//Check if the room exists
+	if WS_Rooms[request.RoomID] != nil {
+		//Send the message to all the clients in the room
+		var response models.NewActivityResponse
+		response.New_Activity = activity
+		//Stringify the response
+		response_string, err := json.Marshal(response)
+		if err != nil{
+			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+		}
+		for _, conn := range WS_Rooms[request.RoomID]{
+			//Send the message with the prefix SINGLE_UPDATE:
+			conn.WriteMessage(1, []byte("SINGLE_NEW::" + string(response_string)))
+		}
+	}
+
 	// Send success response to client
 	w.WriteHeader(http.StatusOK)
 	//Send the result to the client in JSON format
@@ -293,6 +310,19 @@ func ResetWeekHandler(w http.ResponseWriter, r *http.Request) {
 		db.Save(&activity)
 	}
 
+	//Broadcast the change to all the clients in the room
+	//Check if the room exists
+	room_id := r.URL.Query().Get("room_id")
+	//Broadcast the change to all the clients in the room
+	//Check if the room exists
+	if WS_Rooms[room_id] != nil {
+		for _, conn := range WS_Rooms[room_id]{
+			//Send it as command BATCH_RESET
+			conn.WriteMessage(1, []byte("BATCH_RESET::WEEK"))
+		}
+	}
+
+
 	// Send success response to client
 	w.WriteHeader(http.StatusOK)
 }
@@ -317,6 +347,16 @@ func ResetDayHandler(w http.ResponseWriter, r *http.Request) {
 		db.Save(&activity)
 	}
 
+	//Get room id from url
+	room_id := r.URL.Query().Get("room_id")
+	//Broadcast the change to all the clients in the room
+	//Check if the room exists
+	if WS_Rooms[room_id] != nil {
+		for _, conn := range WS_Rooms[room_id]{
+			//Send it as command BATCH_RESET
+			conn.WriteMessage(1, []byte("BATCH_RESET::DAY"))
+		}
+	}
 	// Send success response to client
 	w.WriteHeader(http.StatusOK)
 }
@@ -350,6 +390,23 @@ func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Failed to delete activity", http.StatusInternalServerError)
 		return
 	}
+	//Broadcast the change to all the clients in the room
+	//Check if the room exists
+	if WS_Rooms[request.RoomID] != nil {
+		//Send the message to all the clients in the room
+		var response models.DeleteActivityResponse
+		response.Deleted_ID = deleteId
+		//Stringify the response
+		response_string, err := json.Marshal(response)
+		if err != nil{
+			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+		}
+		for _, conn := range WS_Rooms[request.RoomID]{
+			//Send the message with the prefix SINGLE_UPDATE:
+			conn.WriteMessage(1, []byte("SINGLE_DELETE::" + string(response_string)))
+		}
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -387,6 +444,24 @@ func UpdateActivityHandler(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Failed to update activity", http.StatusInternalServerError)
 		return
 	}
+
+	//Broadcast the change to all the clients in the room
+	//Check if the room exists
+	if WS_Rooms[request.RoomID] != nil {
+		//Send the message to all the clients in the room
+		var response models.UpdateActivityResponse
+		response.Updated_Activity = activity
+		//Stringify the response
+		response_string, err := json.Marshal(response)
+		if err != nil{
+			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+		}
+		for _, conn := range WS_Rooms[request.RoomID]{
+			//Send the message with the prefix SINGLE_UPDATE:
+			conn.WriteMessage(1, []byte("SINGLE_UPDATE::" + string(response_string)))
+		}
+	}
+
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

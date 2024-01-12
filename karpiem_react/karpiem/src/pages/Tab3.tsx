@@ -8,7 +8,7 @@ const Tab3: React.FC = () => {
   var {serverURL} = useServer();
   //Make async function to reset day counts
   async function resetDayCounts(){
-    const res = await fetch(serverURL + '/reset_day');
+    const res = await fetch(serverURL + '/reset_day?room_id='+"123456789");
     //There won't be any data to return just the OK status
     if (res.ok){
       console.log("Day counts reset");
@@ -18,7 +18,7 @@ const Tab3: React.FC = () => {
     }
   }
   async function resetWeekCounts(){
-    const res = await fetch(serverURL + '/reset_week');
+    const res = await fetch(serverURL + '/reset_week?room_id='+"123456789");
     //There won't be any data to return just the OK status
     if (res.ok){
       console.log("Week counts reset");
