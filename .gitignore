@@ -3,3 +3,5 @@ ngrok.exe
 karpiem_backend/tmp
 karpiem_backend/*.exe
 karpiem_backend/.env
+# Local Netlify folder
+.netlify
