@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
-	"sort"
 
 	"karpiem/pkg/data"
 	"karpiem/pkg/models"
@@ -100,15 +99,8 @@ func GetDayActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 	// Create a response with the required properties
 	var totalPoms int64
 	var totalDone int64
-	// Sort the response list by the Done field (false first)
-	sort.Slice(activities, func(i, j int) bool {
-		full_i := activities[i].DDone >= activities[i].DPoms || activities[i].WDone >= activities[i].WPoms
-		full_j := activities[j].DDone >= activities[j].DPoms || activities[j].WDone >= activities[j].WPoms
-		return !full_i && full_j
-	})
-	
+
 	//Go thorugh res_list and split it into two lists, one with the dailies and one with the options
-	//NOTE: By sorting before splitting we ensure to only sort once
 	var dailies []models.DayActivityResponse
 	var options []models.DayActivityResponse
 	for _, activity := range activities {
@@ -153,14 +145,6 @@ func GetWeekActivitiesHandler(w http.ResponseWriter, r *http.Request){
 	var totalPoms int64
 	var totalDone int64
 	
-	//Sort the response list by the Done field (false first)
-	sort.Slice(activities, func(i, j int) bool {
-		full_i := activities[i].WDone >= activities[i].WPoms
-		full_j := activities[j].WDone >= activities[j].WPoms
-		return !full_i && full_j
-	})
-
-	//NOTE: By sorting before splitting we ensure that we only sort once
 	var dailies []models.WeekActivityResponse
 	var weeklies []models.WeekActivityResponse
 	for _, activity := range activities {
@@ -170,6 +154,7 @@ func GetWeekActivitiesHandler(w http.ResponseWriter, r *http.Request){
 			WPoms: activity.WPoms,
 			WDone: activity.WDone,
 			Full: activity.WDone >= activity.WPoms,
+			Focus: activity.Focus,
 		}
 		//Get the number of days the activity is active, should be the number of characters in the Days field
 		days_active := len(activity.Days)
@@ -264,7 +249,24 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to update activity", http.StatusInternalServerError)
 		return
 	}
+	//Broadcast the change to all the clients in the room
+	//Check if the room exists
+	if WS_Rooms[request.RoomID] != nil {
+		//Send the message to all the clients in the room
+		var response models.UpdateActivityResponse
+		response.Updated_Activity = activity
+		//Stringify the response
+		response_string, err := json.Marshal(response)
+		if err != nil{
+			log.Println("Error stringifying response")
+			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+		}
+		for _, conn := range WS_Rooms[request.RoomID]{
+			//Send the message with the prefix SINGLE_UPDATE:
+			conn.WriteMessage(1, []byte("SINGLE_UPDATE::" + string(response_string)))
 
+		}
+	}
 	// Send the updated activity object back to the client
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -331,13 +333,17 @@ func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
 	deleteId := request.ID
 
 	db := data.GetDB()
-	db.Where("id = ?", deleteId).Delete(&data.Activity{})
+	delete_res:= db.Where("id = ?", deleteId).Delete(&data.Activity{})
+	if delete_res.Error != nil {
+		http.Error(w, "Failed to delete activity", http.StatusInternalServerError)
+		return
+	}
 
 	// Check the id no longer exists
 	var activity data.Activity
 	result := db.Where("id = ?", deleteId).First(&activity)
-	if result.Error == nil {
-		http.Error(w, "Failed delete check", http.StatusInternalServerError)
+	if result.Error != nil && result.Error.Error() != "record not found" {
+		http.Error(w, "Error during delete check", http.StatusInternalServerError)
 		return
 	}
 	if result.RowsAffected != 0 {
@@ -425,6 +431,22 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 	if result.Error != nil {
 		http.Error(w, "Failed to update activity", http.StatusInternalServerError)
 		return
+	}
+	//Broadcast the change to all the clients in the room
+	//Check if the room exists
+	if WS_Rooms[request.RoomID] != nil {
+		//Send the message to all the clients in the room
+		var response models.UpdateActivityResponse
+		response.Updated_Activity = activity
+		//Stringify the response
+		response_string, err := json.Marshal(response)
+		if err != nil{
+			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+		}
+		for _, conn := range WS_Rooms[request.RoomID]{
+			//Send the message with the prefix SINGLE_UPDATE:
+			conn.WriteMessage(1, []byte("SINGLE_UPDATE::" + string(response_string)))
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

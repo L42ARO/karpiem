@@ -11,6 +11,7 @@ interface WeekActivityResponse{
   w_poms: number;
   w_done: number;
   full: boolean;
+  focus: boolean;
 }
 interface WeekActivitiesResponse{
   dailies: WeekActivityResponse[];
@@ -32,22 +33,46 @@ const Tab2: React.FC = () => {
     setToday(day == 0 ? 'U' : day == 1 ? 'M' : day == 2 ? 'T' : day == 3 ? 'W' : day == 4 ? 'R' : day == 5 ? 'F' : 'S');
     getWeekActivities();
   }, []);
-  function handleRefresh(event: CustomEvent<RefresherEventDetail>) {
-    setTimeout(() => {
-      //Use await to get week activities
-      getWeekActivities();
-      event.detail.complete();
-    }, 1000);
+  async function handleRefresh(event: CustomEvent<RefresherEventDetail>) {
+    await getWeekActivities();
+    event.detail.complete();
   }
   //Make async function to get week activities
   async function getWeekActivities(){
+    try{
     const res = await fetch(serverURL + '/week_activities');
     const data: WeekActivitiesResponse = await res.json();
+    data.dailies.sort((a, b) => {
+        if (a.focus === b.focus) {
+          if (a.full === b.full) {
+            return 0; 
+          } else {
+            return a.full ? 1 : -1;
+          }
+        } else {
+          return a.focus ? -1 : 1;
+        }
+      });
+      data.weeklies.sort((a, b) => {
+        if (a.focus === b.focus) {
+          if (a.full === b.full) {
+            return 0; 
+          } else {
+            return a.full ? 1 : -1;
+          }
+        } else {
+          return a.focus ? -1 : 1;
+        }
+      });
     console.log(data);
     setWeekActivitiesResponse(data);
     setTotalPoms(data.total_poms);
     setTotalDone(data.total_done);
     return data;
+    }
+    catch(err){
+      console.log(err);
+    }
   }
 
   return (

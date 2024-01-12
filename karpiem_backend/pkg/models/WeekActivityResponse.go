@@ -7,6 +7,7 @@ type WeekActivityResponse struct {
 	WPoms	int64 	`json:"w_poms"`
 	WDone	int64 	`json:"w_done"`
 	Full	bool	`json:"full"`
+	Focus	bool	`json:"focus"`
 }
 
 type WeekAcitivitiesResponse struct {

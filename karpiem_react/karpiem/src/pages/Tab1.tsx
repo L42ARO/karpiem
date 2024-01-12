@@ -4,6 +4,7 @@ import './Tab1.css';
 import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useServer } from '../context/serverContext';
+import { UpdateActivityResponse } from '../context/dataContext';
 
 interface DayActivityResponse{
   id: string;
@@ -21,31 +22,117 @@ interface DayActivitiesResponse{
 }
 
 const Tab1: React.FC = () => {
-  const {serverURL} = useServer();
+  const {socket, connect, disconnect, serverURL} = useServer();
   const [dayActivitiesResponse, setDayActivitiesResponse] = useState<DayActivitiesResponse>();
-  const [total_poms, setTotalPoms] = useState<number>(0);
   const [total_done, setTotalDone] = useState<number>(0);
 
-  function handleRefresh(event: CustomEvent<RefresherEventDetail>) {
-    setTimeout(() => {
-      getDayActivities();
-      event.detail.complete();
-    }, 1000);
+  async function handleRefresh(event: CustomEvent<RefresherEventDetail>) {
+    await getDayActivities();
+    event.detail.complete();
+  }
+  const handleSocketMessage = (msg: MessageEvent) => {
+    //If message includes : then it is a key:value pair, else just print the message
+    if(msg.data.includes('::')){
+      var data = msg.data.split('::');
+      var key = data[0];
+      var value = data[1];
+
+      if (key === "SINGLE_UPDATE"){
+        //VAlue is a json string
+        var activity_res = JSON.parse(value) as UpdateActivityResponse;
+        //Go through the dailies and weeklies and update the ones that match the updated activity id
+        if(activity_res)
+          setDayActivitiesResponse(prevState => {
+            //Check for the activity in the dailies and only update d_done
+            const updatedDailies = prevState?.dailies.map(activity=>{
+              const updated_activity = activity_res.updated_activity;
+              if(activity.id === updated_activity.id){
+                var full = updated_activity.d_done >= updated_activity.d_poms || updated_activity.w_done >= updated_activity.w_poms;
+                return {
+                  ...activity,
+                  d_done: updated_activity.d_done,
+                  focus: updated_activity.focus,
+                  full: full
+                }
+              }
+              return activity;
+            })
+            const updatedOptions = prevState?.options.map(activity=>{
+              const updated_activity = activity_res.updated_activity;
+              if(activity.id === activity_res.updated_activity.id){
+                const full = updated_activity.d_done >= updated_activity.d_poms || updated_activity.w_done >= updated_activity.w_poms;
+                return {
+                  ...activity,
+                  d_done: updated_activity.d_done,
+                  focus: updated_activity.focus,
+                  full: full
+                }
+              }
+              return activity;
+            });
+            const updatedResponse = {...prevState, dailies: updatedDailies, options: updatedOptions} as DayActivitiesResponse;
+            return updatedResponse;
+          });
+
+      }
+
+    }else{
+      console.log(msg.data);
+    }
   }
   useEffect(() => {
     getDayActivities();
+
+    connect(handleSocketMessage);
+     
+    return () => {
+      disconnect();
+    }
   }, []);
-  function getDayActivities(){
-    fetch(serverURL + '/day_activities')
-    .then(res => res.json())
-    .then((data: DayActivitiesResponse) => {
-      console.log(data);
+async function getDayActivities() {
+  try {
+    const response = await fetch(serverURL + '/day_activities');
+    const data = await response.json() as DayActivitiesResponse;
+      data.dailies.sort((a, b) => {
+        if (a.focus === b.focus) {
+          if (a.full === b.full) {
+            return 0; 
+          } else {
+            return a.full ? 1 : -1;
+          }
+        } else {
+          return a.focus ? -1 : 1;
+        }
+      });
+      data.options.sort((a, b) => {
+        if (a.focus === b.focus) {
+          if (a.full === b.full) {
+            return 0; 
+          } else {
+            return a.full ? 1 : -1;
+          }
+        } else {
+          return a.focus ? -1 : 1;
+        }
+      });
       setDayActivitiesResponse(data);
-      setTotalDone(data.total_done);
-      setTotalPoms(data.total_poms);
-    })
-    .catch(console.log)
+    } catch (error) {
+      console.log(error);
+    }
   }
+
+  useEffect(() => {
+    //Update the done count, go through the dailies and weeklies and update the ones that match the updated activity id
+    var newTotal = 0;
+    dayActivitiesResponse?.dailies.forEach(activity=>{
+      newTotal += activity.d_done;
+    });
+    dayActivitiesResponse?.options.forEach(activity=>{
+      newTotal += activity.d_done;
+    });
+    setTotalDone(newTotal);
+  }, [dayActivitiesResponse]);
+
   function EditActivity(activity: DayActivityResponse){
     console.log(activity);
   }
@@ -82,7 +169,7 @@ const Tab1: React.FC = () => {
         </IonGrid>
       <IonCard >
         <IonHeader>
-          <IonToolbar>
+          <IonToolbar className='gradient-header'>
             <IonTitle>Today</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -96,7 +183,7 @@ const Tab1: React.FC = () => {
         </IonCard>
         <IonCard>
           <IonHeader>
-          <IonToolbar>
+          <IonToolbar className='gradient-header'>
             <IonTitle>Options</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -153,7 +240,8 @@ const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) 
       },
       body: JSON.stringify({
         id: activityData.id,
-        focus: focus
+        focus: focus,
+        room_id:"123456789"
       })
     })
     if (res.ok){
@@ -185,7 +273,8 @@ const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) 
           d_or_w: true,
           id: activityData.id,
           value: poms_done,
-          override_key: ""
+          override_key: "",
+          room_id:"123456789"
         })
       })
     }
@@ -323,12 +412,12 @@ const ActivityEditorModal:React.FC<ActivityEditorModalProps>= ({trigger, newActi
               {activityType === 'weekly' && (
               <IonItem>
                 <IonLabel slot='start'>Poms</IonLabel>
-                <IonInput aria-label="poms" slot='end' type='number' value={poms !=0 ? poms:''} onIonChange={updatePoms}></IonInput>
+                <IonInput aria-label="poms" slot='end' type='number' value={poms !=0 ? poms:''} onIonInput={updatePoms}></IonInput>
               </IonItem>
               )}
               <IonItem>
                 <IonLabel slot='start'>Max Daily</IonLabel>
-                <IonInput aria-label="max-daily" slot='end' type='number' value={maxDaily != 0 ? maxDaily:''} onIonChange={updateMaxDaily}></IonInput>
+                <IonInput aria-label="max-daily" slot='end' type='number' value={maxDaily != 0 ? maxDaily:''} onIonInput={updateMaxDaily}></IonInput>
               </IonItem>
               <IonItem>
                 <IonGrid fixed={true}>

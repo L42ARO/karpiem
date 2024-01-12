@@ -15,4 +15,7 @@ func SetupHandlers() {
 	http.HandleFunc("/delete_activity", DeleteActivityHandler)
 	http.HandleFunc("/update_activity", UpdateActivityHandler)
 	http.HandleFunc("/admin", AdminViewHandler)
+
+
+	http.HandleFunc("/ws", websocketHandler)
 }
