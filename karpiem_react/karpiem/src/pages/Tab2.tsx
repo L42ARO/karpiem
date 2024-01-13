@@ -5,6 +5,7 @@ import '../theme/custom_global.css'
 import { add, reload, remove, timeOutline } from 'ionicons/icons';
 import { useEffect, useState } from 'react';
 import { useServer } from '../context/serverContext';
+import { useLocation } from 'react-router';
 
 interface WeekActivityResponse{
   id: string;
@@ -26,6 +27,14 @@ const Tab2: React.FC = () => {
   const [weekActivitiesResponse, setWeekActivitiesResponse] = useState<WeekActivitiesResponse>();
   const [total_poms, setTotalPoms] = useState<number>(0);
   const [total_done, setTotalDone] = useState<number>(0);
+  const location = useLocation();
+
+  useEffect(() => {
+    //Check if it's current location programmatically
+    if(location.pathname === '/tab2'){
+      getWeekActivities();
+    }
+  }, [location]);
   
   useEffect(() => {
     //Figure out what day it is

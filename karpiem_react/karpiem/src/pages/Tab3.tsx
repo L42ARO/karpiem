@@ -5,6 +5,7 @@ import { add, playBackCircle, playSkipBackCircle, reload } from 'ionicons/icons'
 import { useServer } from '../context/serverContext';
 import { Setting } from '../context/dataContext';
 import React, {useEffect, useRef} from 'react';
+import { useLocation } from 'react-router';
 
 const Tab3: React.FC = () => {
   var {serverURL} = useServer();
@@ -13,7 +14,14 @@ const Tab3: React.FC = () => {
   const daysRefs = ["M", "T", "W", "R", "F", "S", "U"].map((day, index) => useRef<HTMLIonInputElement>(null));
   const [settings, setSettings] = React.useState<Setting|null>(null);
   const [days_max, setDaysMax] = React.useState<number[]>([1, 2, 3, 4, 5, 6, 7]);
-  
+  const location = useLocation();
+
+  useEffect(() => {
+    //Check if it's current location programmatically
+    if(location.pathname === '/tab3'){
+      getSettings();
+    }
+  }, [location]);
   useEffect(()=>{
     getSettings();
   }, []);

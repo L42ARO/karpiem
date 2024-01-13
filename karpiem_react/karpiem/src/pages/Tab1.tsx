@@ -7,6 +7,7 @@ import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useServer } from '../context/serverContext';
 import { UpdateActivityResponse } from '../context/dataContext';
 import { Setting } from '../context/dataContext';
+import { useLocation } from 'react-router';
 
 interface DayActivityResponse{
   id: string;
@@ -28,6 +29,15 @@ const Tab1: React.FC = () => {
   const [dayActivitiesResponse, setDayActivitiesResponse] = useState<DayActivitiesResponse>();
   const [total_done, setTotalDone] = useState<number>(0);
   const [day_max, setDayMax] = useState<number>(7);
+  const location = useLocation();
+
+  useEffect(() => {
+    //Check if it's current location programmatically
+    if(location.pathname === '/tab1'){
+      getDayActivities();
+      getSettings();
+    }
+  }, [location]);
 
   async function handleRefresh(event: CustomEvent<RefresherEventDetail>) {
     await getDayActivities();
