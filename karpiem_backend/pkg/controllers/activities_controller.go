@@ -246,6 +246,7 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Check if the new value is greater than the Poms value
 	if newWDone > activity.WPoms || newDDone > activity.DPoms {
+		log.Println("newWDone: ", newWDone, "activity.WPoms", activity.WPoms, " newDDone: ", newDDone, "activity.DPoms", activity.DPoms)
 		// Check override key
 		if request.OverrideKey != "1234" {
 			//Print out all the values for debugging

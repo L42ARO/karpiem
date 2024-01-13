@@ -216,25 +216,8 @@ interface ActivityProps {
 
 const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) => {
   const [poms_done, setPomsDone] = useState<number>(activityData.d_done);
-  const [last_slide, setLastSlide] = useState<number>(0);
   const {serverURL} = useServer();
   const slider = useRef<HTMLIonItemSlidingElement>(null);
-  async function ChangeDoneCount(e: ItemSlidingCustomEvent){
-    var value = await e.target.getSlidingRatio();
-    //If value == 1, then the user is subtracting from the count
-    //If value == -1, then the user is adding to the count
-    //if(value > 1){
-    //  if (poms_done > 0){
-    //    setPomsDone(poms_done - 1);
-    //  }
-    //  e.target.close();
-    //}
-    //else if (value < -3){
-    //  if (poms_done < activityData.d_poms)
-    //    setPomsDone(poms_done + 1);
-    //  e.target.close();
-    //}
-  }
   function ModifyDoneCount(n: number){
     if ((n<0 && poms_done> 0) || (n>0 && !activityData.full)){
       setPomsDone(poms_done + n);
@@ -270,6 +253,11 @@ const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) 
     }
     slider.current?.close();
   }
+  useEffect(() => {
+    console.log("Updating done count with incoming data");
+    if(activityData.d_done != poms_done)
+      setPomsDone(activityData.d_done);
+  }, [activityData]);
 
   useEffect(() => {
     if(poms_done != activityData.d_done){
