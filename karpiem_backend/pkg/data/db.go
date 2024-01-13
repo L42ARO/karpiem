@@ -20,7 +20,7 @@ func InitDB(migrate bool) {
 	log.Println("Connected to database")
 	log.Println("Migrate: ", migrate)
 	if migrate {
-		if err := conn.AutoMigrate(&Activity{}); err != nil {
+		if err := conn.AutoMigrate(&Activity{}, &User{}, &Setting{}); err != nil {
 			log.Fatal(err)
 		}
 	}
