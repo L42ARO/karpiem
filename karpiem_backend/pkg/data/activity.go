@@ -16,3 +16,8 @@ type Activity struct {
 	LastUpdate time.Time `json:"last_update"`
 	Focus      bool      `json:"focus"`
 }
+
+type User struct {
+ID string `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+Username string `json:"username"`
+}
