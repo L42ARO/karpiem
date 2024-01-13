@@ -16,7 +16,7 @@ func SetupHandlers() {
 	http.HandleFunc("/reset_day", ResetDayHandler)
 	http.HandleFunc("/reset_week", ResetWeekHandler)
 
-	http.HandleFunc("/change_setting", ChangeSettingHandler)
+	http.HandleFunc("/update_setting", UpdateSettingHandler)
 	http.HandleFunc("/get_setting", GetSettingHandler)
 	http.HandleFunc("/create_setting", CreateSettingHandler)
 

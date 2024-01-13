@@ -24,6 +24,18 @@ interface Activity{
     last_update: string;
     focus: boolean;
 }
+export interface Setting{
+    id: string;
+    days_max: string;
+    week_max: number;
+    user_id: string;
+    user: User;
+}
+interface User{
+    id: string;
+    username: string;
+    email: string;
+}
 export interface UpdateActivityResponse{
     updated_activity: Activity;
 }

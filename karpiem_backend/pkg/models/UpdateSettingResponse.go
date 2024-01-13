@@ -4,6 +4,6 @@ import (
 	"karpiem/pkg/data"
 )
 
-type ChangeSettingResponse struct {
+type UpdateSettingResponse struct {
 	Updated_Setting data.Setting `json:"updated_setting"`
 }

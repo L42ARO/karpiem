@@ -6,6 +6,7 @@ import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useServer } from '../context/serverContext';
 import { UpdateActivityResponse } from '../context/dataContext';
+import { Setting } from '../context/dataContext';
 
 interface DayActivityResponse{
   id: string;
@@ -26,9 +27,11 @@ const Tab1: React.FC = () => {
   const {socket, connect, disconnect, serverURL} = useServer();
   const [dayActivitiesResponse, setDayActivitiesResponse] = useState<DayActivitiesResponse>();
   const [total_done, setTotalDone] = useState<number>(0);
+  const [day_max, setDayMax] = useState<number>(7);
 
   async function handleRefresh(event: CustomEvent<RefresherEventDetail>) {
     await getDayActivities();
+    await getSettings();
     event.detail.complete();
   }
   const handleSocketMessage = (msg: MessageEvent) => {
@@ -92,13 +95,38 @@ const Tab1: React.FC = () => {
   }
   useEffect(() => {
     getDayActivities();
-
+    getSettings();
     connect(handleSocketMessage);
      
     return () => {
       disconnect();
     }
   }, []);
+  async function getSettings(){
+    try{
+      const res = await fetch(serverURL + '/get_setting');
+      if (res.ok){
+        const data = await res.json() as Setting;
+        //Parse the days_max from the settings
+        const days_max = data.days_max;
+        //Convert the days_max to a number array
+        var days_max_array = [];
+        for (var i = 0; i < days_max.length; i+=2){
+          days_max_array.push(parseInt(days_max.substring(i, i+2), 16));
+        }
+        //Depending on the day of the week, set the day_max (Monday is 0, Sunday is 6)
+        var day = new Date().getDay()-1 % 6;
+        setDayMax(days_max_array[day]);
+
+      }
+      else{
+        throw new Error("Error getting settings");
+      }
+    }
+    catch(err){
+      console.log(err);
+    }
+  }
 async function getDayActivities() {
   try {
     const response = await fetch(serverURL + '/day_activities');
@@ -167,7 +195,7 @@ async function getDayActivities() {
         </IonRefresher>
         <IonGrid fixed={true}>
           <IonRow className='ion-justify-content-center ion-padding-horizontal'>
-            {Array.from({ length: 12}, (_, i) => i).map((_, i) => {
+            {Array.from({ length: day_max}, (_, i) => i).map((_, i) => {
               var mark_done = i < total_done;
               return <IonCol key={i} size="1.5" size-md="1" className='ion-no-padding'>
                 <div className={`pom_circle ${mark_done?"complete":""}`}>

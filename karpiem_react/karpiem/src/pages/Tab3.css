@@ -1,0 +1,19 @@
+.day-circle{
+    background-color: var(--ion-color-light);
+    border-radius: 50%;
+    aspect-ratio: 1/1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+ion-input.center{
+    text-align: center;
+}
+ion-col.center-content{
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}

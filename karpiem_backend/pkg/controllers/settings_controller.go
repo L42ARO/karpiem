@@ -42,12 +42,14 @@ func GetSettingHandler(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(setting)
 }
 
-func ChangeSettingHandler(w http.ResponseWriter, r *http.Request){
+func UpdateSettingHandler(w http.ResponseWriter, r *http.Request){
 	// Get the setting from the request body
-	var request models.ChangeSettingRequest
+	var request models.UpdateSettingRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		log.Println(err)
+		msg := "Error decoding request body"
+		log.Println(msg)
+		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 	// Get the setting from the database
@@ -63,16 +65,18 @@ func ChangeSettingHandler(w http.ResponseWriter, r *http.Request){
 	room_id := request.RoomID
 	//Check if the room exists
 	if WS_Rooms[room_id] != nil{
-		var response models.ChangeSettingResponse
+		var response models.UpdateSettingResponse
 		response.Updated_Setting = setting
 		//Send the response to all clients in the room
+		response_string, err := json.Marshal(response)
+		if err != nil {
+			msg:= "Error marshalling response"
+			log.Println(msg)
+			http.Error(w, msg, http.StatusMultiStatus)
+			return
+		}
 		for _, client := range WS_Rooms[room_id] {
 			//Stringify the response
-			response_string, err := json.Marshal(response)
-			if err != nil {
-				log.Println(err)
-				return
-			}
 			//Send the response with the prefix "SETTING_UPDATE::"
 			client.WriteMessage(1, []byte("SETTING_UPDATE::" + string(response_string)))
 
