@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Page</title>
+    
 </head>
 <body>
     <h1>Welcome to the Admin Page</h1>
@@ -106,8 +107,22 @@
         <input type="text" id="deleteId" name="deleteId">
         <button type="button" onclick="deleteActivity()">Delete Activity</button>
     </div>
-
-    <script>
+    <div>
+        <h2>Create User</h2>
+        <input type="text" id="username" name="username" placeholder="username">
+        <input type="password" id="password" name="password" placeholder="password">
+        <input type="text" id="email" name="email" placeholder="email">
+        <button type="button" onclick="createUser()">Create User</button>
+    </div>
+    <div>
+        <h2>Login User Test</h2>
+        <!--Will only require username password and button to submit-->
+        <input type="text" id="loginUsername" name="loginUsername" placeholder="username">
+        <input type="password" id="loginPassword" name="loginPassword" placeholder="password">
+        <button type="button" onclick="loginUserTest()">Login</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.js"></script>
+    <script type="text/javascript">
         //Get server url from document
         
         var url = ""
@@ -353,6 +368,67 @@
             })
             .catch((error) => {
                 console.error('Error:', error);
+            });
+        }
+        function createUser(){
+            const password = document.getElementById("password").value;
+            var bcrypt = dcodeIO.bcrypt;
+            bcrypt.hash(password, 10, function(err, hash) {
+               if (err) throw err;
+               hashedPassword = hash;
+                fetch(url + '/create_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "username": document.getElementById("username").value,
+                        "password": hashedPassword,
+                        "email": document.getElementById("email").value
+                    }),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data=>{
+                    console.log('Create User:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+            });
+        }
+        function loginUserTest(){
+            const password = document.getElementById("loginPassword").value;
+            var bcrypt = dcodeIO.bcrypt;
+            bcrypt.hash(password, 10, function(err, hash) {
+               if (err) throw err;
+               hashedPassword = hash;
+                fetch(url + '/login_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "username": document.getElementById("loginUsername").value,
+                        "password": hashedPassword
+                    }),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data=>{
+                    console.log('Login User:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
             });
         }
     </script>

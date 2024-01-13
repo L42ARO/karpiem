@@ -9,17 +9,21 @@ import(
 )
 
 func CreateSettingHandler(w http.ResponseWriter, r *http.Request){
-	//Get the setting from the request body
-	var request models.CreateSettingRequest
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if err != nil {
-		log.Println(err)
+	//User_id will be in the url query
+	user_id := r.URL.Query().Get("user_id")
+	//If there is no user_id, return an error
+	if user_id == ""{
+		log.Println("No user_id in url query")
+		http.Error(w, "No user_id in url query", http.StatusBadRequest)
 		return
 	}
-	//TODO: When we incorporate users, assume user_id wil be in the request and we will check if their setting already exists
 	//Create the setting in the database
 	db := data.GetDB()
-	setting := data.Setting{DaysMax: request.DaysMax}
+	setting := data.Setting{
+		UserID: user_id,
+		DaysMax: "0C0C0C0C0C0C0C",
+		WeekMax: 86,
+	}
 	db.Create(&setting)
 	 //Send the setting back to the client directly
 	 w.Header().Set("Content-Type", "application/json")

@@ -20,5 +20,8 @@ func SetupHandlers() {
 	http.HandleFunc("/get_setting", GetSettingHandler)
 	http.HandleFunc("/create_setting", CreateSettingHandler)
 
+	http.HandleFunc("/create_user", CreateUserHandler)
+	http.HandleFunc("/login_user", LoginHandler)
+
 	http.HandleFunc("/ws", websocketHandler)
 }
