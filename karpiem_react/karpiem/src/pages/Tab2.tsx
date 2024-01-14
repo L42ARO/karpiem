@@ -1,4 +1,4 @@
-import { IonButton, IonCard, IonCardContent, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonRefresher, IonRefresherContent, IonRow, IonTitle, IonToolbar, RefresherEventDetail } from '@ionic/react';
+import { IonButton, IonCard, IonCardContent, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonPage, IonRefresher, IonRefresherContent, IonRow, IonTitle, IonToolbar, RefresherEventDetail, useIonModal } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab2.css';
 import '../theme/custom_global.css'
@@ -8,6 +8,8 @@ import { useServer } from '../context/serverContext';
 import { useLocation } from 'react-router';
 import { GetAllActivitiesResponse } from '../context/dataContext';
 import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
+import { OverrideModal } from '../components/OverrideModal';
+import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
 
 interface WeekActivityResponse{
   id: string;
@@ -32,6 +34,9 @@ const Tab2: React.FC = () => {
   const [total_poms, setTotalPoms] = useState<number>(0);
   const [total_done, setTotalDone] = useState<number>(0);
   const location = useLocation();
+  const [overrideModalPresent, overrideModalDismiss] = useIonModal(OverrideModal, {
+    onDismiss: (data:string, role:string)=>overrideModalDismiss(data, role)
+  });
 
   useEffect(() => {
     //Check if it's current location programmatically
@@ -54,10 +59,6 @@ const Tab2: React.FC = () => {
 
   //Make async function to get week activities
   async function getWeekActivities() {
-  var today = new Date().getDay()-1;
-  if(today < 0) today = 6;
-  //Get the day as M, T, W, R, F, S, U
-  var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
 
   try {
     const response = await fetch(serverURL + '/get_all_activities');
@@ -67,7 +68,7 @@ const Tab2: React.FC = () => {
     }
     const data = await response.json() as GetAllActivitiesResponse;
       //Filter the activities to only include the ones that are active and have the day in their days
-      data.activities = data.activities.filter(activity => activity.active && activity.days.indexOf(day) > -1);
+      data.activities = data.activities.filter(activity => activity.active);
       data.activities.sort((a, b) => {
         if (a.focus === b.focus) {
           const a_full = a.w_done >= a.w_poms;
@@ -81,7 +82,7 @@ const Tab2: React.FC = () => {
           return a.focus ? -1 : 1;
         }
       });
-      //Separate the dailies and weeklies
+      //Separate the activities into dailies and weeklies
       //If d_poms * 7 == len(days) then it is a daily
       var dailies = data.activities.filter(activity => activity.days.length == activity.d_poms*7);
       //Otherwise it is a weekly a.k.a optional for the day
@@ -122,6 +123,34 @@ const Tab2: React.FC = () => {
       showToast(`Error getting day activities: ${(error as Error).message}`, "danger");
     }
   }
+  useEffect(() => {
+    //Calculate the total poms and done
+    var total_poms = 0;
+    var total_done = 0;
+    dailies.forEach(activity => {
+      total_poms += activity.w_poms;
+      total_done += activity.w_done;
+    });
+    weeklies.forEach(activity => {
+      total_poms += activity.w_poms;
+      total_done += activity.w_done;
+    });
+    console.log("updating total poms and done:")
+    setTotalPoms(total_poms);
+    setTotalDone(total_done);
+
+  }, [dailies, weeklies]);
+  const OpenOverrideModal = (n: number, changeDone: (poms_done: number, override_key?: string) => Promise<void>) => {
+    overrideModalPresent({
+      cssClass: 'translucent-modal',
+      onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
+        if (ev.detail.role === 'confirm') {
+          const key = ev.detail.data as string;
+          changeDone(n, key);
+        }
+      },
+    });
+  }
 
   return (
     <IonPage>
@@ -159,7 +188,7 @@ const Tab2: React.FC = () => {
           <IonCardContent className='ion-no-padding'>
             <IonList>
               {dailies.map((activity, i) => (
-                <ActivityItem key={activity.id} activityData={activity} week_view/>
+                <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal}/>
               ))}
             </IonList>
           </IonCardContent>
@@ -173,7 +202,7 @@ const Tab2: React.FC = () => {
           <IonCardContent className='ion-no-padding'>
         <IonList>
           {weeklies.map((activity, i) => (
-            <ActivityItem key={activity.id} activityData={activity} week_view={true}/>
+            <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal}/>
           ))}
         </IonList>
 </IonCardContent>

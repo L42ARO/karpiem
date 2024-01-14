@@ -10,6 +10,7 @@ import { Setting } from '../context/dataContext';
 import { useLocation } from 'react-router';
 import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
+import { OverrideModal } from '../components/OverrideModal';
 
 interface DayActivityResponse{
   id: string;
@@ -321,35 +322,7 @@ async function getDayActivities() {
   );
 };
 
-const OverrideModal = ({
-  onDismiss,
-}: {
-  onDismiss: (data?: string | null | undefined | number, role?: string) => void;
-}) => {
-  const inputRef = useRef<HTMLIonInputElement>(null);
-  return (
-    <>
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonButton color="medium" onClick={() => onDismiss(null, 'cancel')}>
-              Cancel
-            </IonButton>
-          </IonButtons>
-          <IonTitle>Override Action</IonTitle>
-          <IonButtons slot="end">
-            <IonButton onClick={() => onDismiss(inputRef.current?.value, 'confirm')} strong={true}>
-              Confirm
-            </IonButton>
-          </IonButtons>
-        </IonToolbar>
-      </IonHeader>
-      <IonItem>
-        <IonInput ref={inputRef} labelPlacement="stacked" label="Override Key" placeholder="* * * *" />
-      </IonItem>
-    </>
-  );
-};
+
 
 interface ActivityData {
   id: string;
