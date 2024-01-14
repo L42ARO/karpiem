@@ -11,8 +11,8 @@ import (
 	"karpiem/pkg/models"
 )
 
-func AddActivityHandler(w http.ResponseWriter, r *http.Request) {
-	var request models.ActivityRequest
+func CreateActivityHandler(w http.ResponseWriter, r *http.Request) {
+	var request models.CreateActivityRequest
 
 	// Decode JSON request body
 	decoder := json.NewDecoder(r.Body)
@@ -54,7 +54,7 @@ func AddActivityHandler(w http.ResponseWriter, r *http.Request) {
 	//Check if the room exists
 	if WS_Rooms[request.RoomID] != nil {
 		//Send the message to all the clients in the room
-		var response models.NewActivityResponse
+		var response models.CreateActivityResponse
 		response.New_Activity = activity
 		//Stringify the response
 		response_string, err := json.Marshal(response)
@@ -71,6 +71,29 @@ func AddActivityHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	//Send the result to the client in JSON format
 	json.NewEncoder(w).Encode(activity)
+
+}
+
+func GetAllActivitiesHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the GORM database connection
+	db := data.GetDB()
+
+	// Find all activities
+	var activities []data.Activity
+	result := db.Find(&activities)
+
+	// Check for errors
+	if result.Error != nil {
+		http.Error(w, "Failed to get activities", http.StatusInternalServerError)
+		return
+	}
+	res := models.GetAllActivitiesResponse{
+		Activities: activities,
+	}
+	// Send the activities back to the client
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
 
 }
 

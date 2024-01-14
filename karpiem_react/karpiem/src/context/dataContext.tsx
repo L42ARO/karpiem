@@ -39,3 +39,6 @@ interface User{
 export interface UpdateActivityResponse{
     updated_activity: Activity;
 }
+export interface GetAllActivitiesResponse{
+    activities: Activity[];
+}
