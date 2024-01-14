@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+	"strings"
 
 	"karpiem/pkg/data"
 	"karpiem/pkg/models"
@@ -75,26 +76,15 @@ func AddActivityHandler(w http.ResponseWriter, r *http.Request) {
 
 
 func GetDayActivitiesHandler(w http.ResponseWriter, r *http.Request) {
-	// Get current day
-	currentDay := time.Now().Weekday().String()
-	// Make sure we go by M T W R F S U
-	if currentDay == "Monday" {
-		currentDay = "M"
-	} else if currentDay == "Tuesday" {
-		currentDay = "T"
-	} else if currentDay == "Wednesday" {
-		currentDay = "W"
-	} else if currentDay == "Thursday" {
-		currentDay = "R"
-	} else if currentDay == "Friday" {
-		currentDay = "F"
-	} else if currentDay == "Saturday" {
-		currentDay = "S"
-	} else if currentDay == "Sunday" {
-		currentDay = "U"
-	}
+	//Get current day from url query
+	currentDay := r.URL.Query().Get("current_day")
 	log.Println("Current day: ", currentDay)
-
+	//Check that the current day is either: "M", "T", "W", "R", "F", "S", "U"
+	dayOptions := "MTWRFSU"
+	if !strings.Contains(dayOptions, currentDay) {
+		http.Error(w, "Invalid day", http.StatusBadRequest)
+		return
+	}
 	// Begin query for activities
 	db := data.GetDB()
 
