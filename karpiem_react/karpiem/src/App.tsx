@@ -57,7 +57,7 @@ const App: React.FC = () => (
             <Redirect to="/tab1" />
           </Route>
         </IonRouterOutlet>
-        <IonTabBar slot="bottom">
+        <IonTabBar slot="bottom" id="tab-footer">
           <IonTabButton tab="day" href="/tab1">
             <IonIcon aria-hidden="true" icon={sunny} />
             <IonLabel>Day</IonLabel>

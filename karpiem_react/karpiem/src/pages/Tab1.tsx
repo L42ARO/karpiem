@@ -1,4 +1,4 @@
-import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent } from '@ionic/react';
+import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToast, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent, useIonToast } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab1.css';
 import '../theme/custom_global.css';
@@ -25,7 +25,7 @@ interface DayActivitiesResponse{
 }
 
 const Tab1: React.FC = () => {
-  const {socket, connect, disconnect, serverURL} = useServer();
+  const {socket, connect, disconnect, serverURL, showToast} = useServer();
   const [dayActivitiesResponse, setDayActivitiesResponse] = useState<DayActivitiesResponse>();
   const [total_done, setTotalDone] = useState<number>(0);
   const [day_max, setDayMax] = useState<number>(7);
@@ -34,11 +34,11 @@ const Tab1: React.FC = () => {
   useEffect(() => {
     //Check if it's current location programmatically
     if(location.pathname === '/tab1'){
+      console.log("Tab1 re-entered");
       getDayActivities();
       getSettings();
     }
   }, [location]);
-
   async function handleRefresh(event: CustomEvent<RefresherEventDetail>) {
     await getDayActivities();
     await getSettings();
@@ -125,21 +125,34 @@ const Tab1: React.FC = () => {
           days_max_array.push(parseInt(days_max.substring(i, i+2), 16));
         }
         //Depending on the day of the week, set the day_max (Monday is 0, Sunday is 6)
-        var day = new Date().getDay()-1 % 6;
+        var day = new Date().getDay()-1;
+        if(day < 0) day = 6;
         setDayMax(days_max_array[day]);
 
       }
       else{
-        throw new Error("Error getting settings");
+        var resTxt = await res.text();
+        throw new Error("Error getting settings:" + resTxt);
       }
     }
     catch(err){
       console.log(err);
+      //Present a toast with the error
+      showToast((err as Error).message, "danger");
     }
   }
 async function getDayActivities() {
+  var today = new Date().getDay()-1;
+  if(today < 0) today = 6;
+  //Get the day as M, T, W, R, F, S, U
+  var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
+
   try {
-    const response = await fetch(serverURL + '/day_activities');
+    const response = await fetch(serverURL + '/day_activities?current_day='+ day);
+    if (!response.ok){
+      var resTxt = await response.text();
+      throw new Error("Error getting day activities:" + resTxt);
+    }
     const data = await response.json() as DayActivitiesResponse;
       data.dailies.sort((a, b) => {
         if (a.focus === b.focus) {
@@ -166,6 +179,8 @@ async function getDayActivities() {
       setDayActivitiesResponse(data);
     } catch (error) {
       console.log(error);
+      // presentToastInfo((error as Error).message);
+      showToast((error as Error).message, "danger");
     }
   }
 
@@ -186,10 +201,11 @@ async function getDayActivities() {
   }
   
   return (
+    <>
     <IonPage>
-      <IonHeader>
+      <IonHeader id="header">
         <IonToolbar>
-          <IonButton slot="start" color="primary">
+          <IonButton slot="start" color="primary" id='toast-trig'>
             <IonIcon icon={reload} />
           </IonButton>
           <IonTitle>Day</IonTitle>
@@ -243,8 +259,10 @@ async function getDayActivities() {
         </IonList>
 </IonCardContent>
         </IonCard>
+        
       </IonContent>
     </IonPage>
+    </>
   );
 };
 interface ActivityProps {
