@@ -1,6 +1,6 @@
 package models
 
-type ActivityRequest struct {
+type CreateActivityRequest struct {
 	Daily bool   `json:"daily"`
 	Name  string `json:"name"`
 	Poms  int    `json:"poms"`

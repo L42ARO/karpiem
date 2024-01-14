@@ -2,6 +2,6 @@ package models
 import (
 	"karpiem/pkg/data"
 )
-type NewActivityResponse struct {
+type CreateActivityResponse struct {
 	New_Activity data.Activity `json:"new_activity"`
 }
