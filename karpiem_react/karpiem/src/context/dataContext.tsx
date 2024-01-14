@@ -42,3 +42,25 @@ export interface UpdateActivityResponse{
 export interface GetAllActivitiesResponse{
     activities: Activity[];
 }
+// UpdateActivityRequest golang:
+/*type UpdateActivityRequest struct {
+	ID		string `json:"id"`
+	Active 	bool   `json:"active"`
+	Daily	bool   `json:"daily"`
+	Name	string `json:"name"`
+	Days 	string `json:"days"`
+	Poms	int64  `json:"poms"`
+	Max		int64  `json:"max"`
+	RoomID	string `json:"room_id"`
+}
+*/
+export interface UpdateActivityRequest{
+    id: string;
+    active: boolean;
+    daily: boolean;
+    name: string;
+    days: string;
+    poms: number;
+    max: number;
+    room_id: string;
+}

@@ -1,16 +1,17 @@
-import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToast, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent, useIonModal, useIonToast } from '@ionic/react';
+import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToast, IonToggle, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent, useIonModal, useIonToast } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab1.css';
 import '../theme/custom_global.css';
 import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useServer } from '../context/serverContext';
-import { Activity, GetAllActivitiesResponse, UpdateActivityResponse } from '../context/dataContext';
+import { Activity, GetAllActivitiesResponse, UpdateActivityRequest, UpdateActivityResponse } from '../context/dataContext';
 import { Setting } from '../context/dataContext';
 import { useLocation } from 'react-router';
 import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
 import { OverrideModal } from '../components/OverrideModal';
+import { ActivityEditorModal, ActivityEditorModalProps } from '../components/ActivityEditorModal';
 
 interface DayActivityResponse{
   id: string;
@@ -28,6 +29,7 @@ interface DayActivitiesResponse{
   total_done: number;
 }
 
+
 const Tab1: React.FC = () => {
   const {socket, connect, disconnect, serverURL, showToast} = useServer();
   // const [dayActivitiesResponse, setDayActivitiesResponse] = useState<DayActivitiesResponse>();
@@ -41,6 +43,12 @@ const Tab1: React.FC = () => {
   const [overrideModalPresent, overrideModalDismiss] = useIonModal(OverrideModal, {
     onDismiss: (data:string, role:string)=>overrideModalDismiss(data, role)
   });
+  const [currentEditorSettings, setCurrentEditorSettings] = useState<ActivityEditorModalProps>({
+    onDismiss:()=>{},
+    newActivity: true,
+    daily: false
+  });
+  const [activityEditorModalPresent, activityEditorModalDismiss] = useIonModal(ActivityEditorModal, currentEditorSettings);
 
   useEffect(() => {
     //Check if it's current location programmatically
@@ -63,6 +71,7 @@ const Tab1: React.FC = () => {
       var value = data[1];
 
       if (key === "SINGLE_UPDATE"){
+        console.log("SINGLE_UPDATE:",value);
         //VAlue is a json string
         var activity_res = JSON.parse(value) as UpdateActivityResponse;
         //Go through the habits and options and update the ones that match the updated activity id
@@ -75,7 +84,12 @@ const Tab1: React.FC = () => {
                 var full = updated_activity.d_done >= updated_activity.d_poms || updated_activity.w_done >= updated_activity.w_poms;
                 return {
                   ...activity,
+                  days: updated_activity.days,
+                  name: updated_activity.name,
+                  active: updated_activity.active,
                   d_done: updated_activity.d_done,
+                  w_done: updated_activity.w_done,
+                  d_poms: updated_activity.d_poms,
                   focus: updated_activity.focus,
                   full: full
                 }
@@ -91,7 +105,12 @@ const Tab1: React.FC = () => {
                 const full = updated_activity.d_done >= updated_activity.d_poms || updated_activity.w_done >= updated_activity.w_poms;
                 return {
                   ...activity,
+                  days: updated_activity.days,
+                  name: updated_activity.name,
+                  active: updated_activity.active,
                   d_done: updated_activity.d_done,
+                  w_done: updated_activity.w_done,
+                  d_poms: updated_activity.d_poms,
                   focus: updated_activity.focus,
                   full: full
                 }
@@ -196,7 +215,9 @@ async function getDayActivities() {
           d_done: activity.d_done,
           w_done: activity.w_done,
           full: full,
-          focus: activity.focus
+          focus: activity.focus,
+          days: activity.days,
+          active: activity.active,
         }
       });
       var options_simplified = options.map(activity => {
@@ -209,7 +230,9 @@ async function getDayActivities() {
           d_done: activity.d_done,
           w_done: activity.w_done,
           full: full,
-          focus: activity.focus
+          focus: activity.focus,
+          days: activity.days,
+          active: activity.active,
         }
       });
       setHabits(habits_simplified);
@@ -258,6 +281,23 @@ async function getDayActivities() {
       },
     });
   }
+  const OpenActivityEditorModal = (activityData?: SimplifiedActivity, newActivity?:boolean, daily?:boolean) => {
+    setCurrentEditorSettings({
+
+      onDismiss: (data?: string | null | undefined | number, role?: string) => activityEditorModalDismiss(data, role),
+      activityData: activityData,
+      newActivity: newActivity ?? true,
+      daily: daily ?? false
+    });
+    activityEditorModalPresent({
+      cssClass: 'translucent-modal',
+      onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
+        if (ev.detail.role === 'confirm') {
+          console.log("Confirm");
+        }
+      },
+    });
+  }
 
   return (
     <>
@@ -265,13 +305,13 @@ async function getDayActivities() {
       <IonHeader id="header">
         <IonToolbar>
           <IonTitle>Day</IonTitle>
-          <IonButton slot="end" color="primary" id="add-activity-trigger">
+          <IonButton slot="end" color="primary" shape="round" onClick={e=>OpenActivityEditorModal()}>
             <IonIcon icon={add} />
           </IonButton>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen={true} className='ion-padding-top'>
-        <ActivityEditorModal trigger='add-activity-trigger' newActivity={true} />
+        {/* <ActivityEditorModal trigger='add-activity-trigger' newActivity={true} /> */}
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
@@ -296,7 +336,14 @@ async function getDayActivities() {
           <IonCardContent className='ion-no-padding'>
             <IonList>
               {habits.map((activity, i) => (
-                <ActivityItem key={activity.id} activityData={activity} blocked={day_blocked} override_func={OpenOverrideModal}/>
+                <ActivityItem 
+                  key={activity.id} 
+                  activityData={activity} 
+                  blocked={day_blocked} 
+                  override_func={OpenOverrideModal}
+                  edit_func={OpenActivityEditorModal}
+                  daily
+                />
               ))}
             </IonList>
           </IonCardContent>
@@ -310,7 +357,13 @@ async function getDayActivities() {
           <IonCardContent className='ion-no-padding'>
         <IonList>
           {options.map((activity, i) => (
-            <ActivityItem key={activity.id} activityData={activity} blocked={day_blocked} override_func={OpenOverrideModal}/>
+            <ActivityItem 
+              key={activity.id}
+              activityData={activity}
+              blocked={day_blocked} 
+              override_func={OpenOverrideModal}
+              edit_func={OpenActivityEditorModal}
+            />
           ))}
         </IonList>
 </IonCardContent>
@@ -323,138 +376,5 @@ async function getDayActivities() {
 };
 
 
-
-interface ActivityData {
-  id: string;
-  name: string;
-  maxDaily: number;
-  poms: number;
-  days: string;
-  daily: boolean;
-}
-
-interface ActivityEditorModalProps {
-  trigger: string;
-  newActivity?: boolean | undefined;
-  activityData?: ActivityData | undefined;
-}
-
-const ActivityEditorModal:React.FC<ActivityEditorModalProps>= ({trigger, newActivity, activityData}:ActivityEditorModalProps) => {
-  const modal = useRef<HTMLIonModalElement>(null);
-  const [activityType, setActivityType] = useState<'weekly'|'daily'>(newActivity ? 'weekly' : activityData?.daily ? 'daily' : 'weekly');
-  const [activityName, setActivityName] = useState<string>(activityData?.name ?? '');
-  const [maxDaily, setMaxDaily] = useState<number>(activityData?.maxDaily ?? 0);
-  const [poms, setPoms] = useState<number>(activityData?.poms ?? 0);
-  const [days, setDays] = useState<string>(activityData?.days ?? 'MTWRFSU');
-  const {serverURL} = useServer();
-
-  const segment = useRef<HTMLIonSegmentElement>(null);
-  function segmentChange(event: SegmentCustomEvent){
-    //Get the value of the segment as a string
-    var value = event.detail.value as string;
-    if (value === 'weekly' || value === 'daily'){
-      setActivityType(value);
-    }
-    return;
-  }
-  function dismissAddActivityModal() {
-    modal.current?.dismiss();
-  }
-  function updateDays(day: string) {
-    //If the day is already in the list, remove it
-    if (days.indexOf(day) > -1){
-      setDays(days.replace(day, ''));
-    }
-    //Otherwise, add it
-    else {
-      setDays(days + day);
-    }
-  }
-  function updateActivityName(e: InputCustomEvent) {
-    e.detail.value && setActivityName(e.detail.value);
-  }
-  function updateMaxDaily(e: InputCustomEvent) {
-    e.detail.value && setMaxDaily(parseInt(e.detail.value));
-  }
-  function updatePoms(e: InputCustomEvent) {
-    e.detail.value && setPoms(parseInt(e.detail.value));
-  }
-  function ParseModalData(){
-    var activity = {
-      name: activityName,
-      max: maxDaily,
-      poms: poms,
-      days: days,
-      daily: activityType === 'daily',
-      room_id: "123456789"
-    }
-    //Send the data to the server
-    fetch(serverURL + '/add_activity', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(activity)
-    })
-    //clean up the inputs
-    setActivityName('');
-    setMaxDaily(0);
-    setPoms(0);
-    setDays('MTWRFSU');
-
-    modal.current?.dismiss();
-  }
-  return(
-        <IonModal className='translucent-modal' id="add-activity-modal" trigger={trigger} ref={modal}>
-          <IonHeader>
-            <IonToolbar>
-              <IonTitle slot="start">Add Activity</IonTitle>
-              <IonButton slot="end" color="primary" onClick={dismissAddActivityModal}>Cancel</IonButton>
-            </IonToolbar>
-            </IonHeader>
-            <IonSegment value={activityType} onIonChange={segmentChange} ref={segment}>
-              <IonSegmentButton value="weekly">
-                <IonLabel>Weekly</IonLabel>
-              </IonSegmentButton>
-              <IonSegmentButton value="daily">
-                <IonLabel>Daily</IonLabel>
-              </IonSegmentButton>
-            </IonSegment>
-            <IonList>
-              <IonItem>
-                <IonLabel position='stacked'>Activity Name</IonLabel>
-                <IonInput aria-label="name" value={activityName} onIonInput={updateActivityName}></IonInput>
-              </IonItem>
-              {activityType === 'weekly' && (
-              <IonItem>
-                <IonLabel slot='start'>Poms</IonLabel>
-                <IonInput aria-label="poms" slot='end' type='number' value={poms !=0 ? poms:''} onIonInput={updatePoms}></IonInput>
-              </IonItem>
-              )}
-              <IonItem>
-                <IonLabel slot='start'>Max Daily</IonLabel>
-                <IonInput aria-label="max-daily" slot='end' type='number' value={maxDaily != 0 ? maxDaily:''} onIonInput={updateMaxDaily}></IonInput>
-              </IonItem>
-              <IonItem>
-                <IonGrid fixed={true}>
-                  <IonCol className='ion-justify-content-center ion-padding-horizontal'>
-                    {['M', 'T', 'W', 'R', 'F', 'S', 'U'].map((day, i) => (
-                      <IonButton key={i} color={days.indexOf(day) > -1 ? "primary":"light"} onClick={e=>{
-                        e.preventDefault();
-                        updateDays(day);
-                      }}>
-                        <IonLabel>{day}</IonLabel>
-                      </IonButton>
-                    ))}
-                  </IonCol>
-                </IonGrid>
-              </IonItem>
-            </IonList>
-            <IonButton onClick={e=>{
-              e.preventDefault();
-              ParseModalData();
-            }}> Done</IonButton>
-        </IonModal>
-  )}
 
 export default Tab1;

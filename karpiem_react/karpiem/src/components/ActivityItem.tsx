@@ -1,7 +1,7 @@
 import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToast, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent, useIonToast } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import '../theme/custom_global.css';
-import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
+import { add, create, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { useServer } from '../context/serverContext';
 import { FormEventHandler, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Activity, GetAllActivitiesResponse, UpdateActivityResponse } from '../context/dataContext';
@@ -13,19 +13,23 @@ export interface SimplifiedActivity{
   w_poms: number;
   d_done: number;
   w_done: number;
+  days: string;
   full: boolean;
   focus: boolean;
+  active: boolean;
 }
 export interface ActivityItemProps {
   activityData: SimplifiedActivity;
   week_view?: boolean;
   blocked?: boolean;
+  daily?: boolean;
   override_func?: (n:number, changeDone: (poms_done: number, override_key?: string) => Promise<void>) => void;
+  edit_func?: (activity: SimplifiedActivity, newActivity: boolean, daily?:boolean) => void;
 }
 
 
 export const ActivityItem:React.FC<ActivityItemProps>= (
-    {activityData, week_view, blocked, override_func}:ActivityItemProps
+    {activityData, week_view, blocked, override_func, edit_func, daily}:ActivityItemProps
 ) => {
   const [poms_done, setPomsDone] = useState<number>(!week_view?activityData.d_done:activityData.w_done);
   const {serverURL, showToast} = useServer();
@@ -136,6 +140,9 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
 
          <IonItem id="update-modal-trigger" color={activityData.focus ? "primary":activityData.full ? "danger":""}>
           <IonLabel slot='start'>{activityData.name}</IonLabel>
+          <IonButton fill="clear" color="medium" onClick={e=>edit_func?.(activityData, false, daily)}>
+            <IonIcon icon={create}/>
+            </IonButton>
           <IonChip slot='end' color={activityData.focus ? "dark": activityData.full?"dark":"primary"}>
             {!week_view?activityData.d_done:activityData.w_done}
             /

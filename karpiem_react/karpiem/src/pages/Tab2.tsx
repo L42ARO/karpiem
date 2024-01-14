@@ -10,6 +10,7 @@ import { GetAllActivitiesResponse } from '../context/dataContext';
 import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
 import { OverrideModal } from '../components/OverrideModal';
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
+import { ActivityEditorModal, ActivityEditorModalProps } from '../components/ActivityEditorModal';
 
 interface WeekActivityResponse{
   id: string;
@@ -37,6 +38,12 @@ const Tab2: React.FC = () => {
   const [overrideModalPresent, overrideModalDismiss] = useIonModal(OverrideModal, {
     onDismiss: (data:string, role:string)=>overrideModalDismiss(data, role)
   });
+  const [currentEditorSettings, setCurrentEditorSettings] = useState<ActivityEditorModalProps>({
+    onDismiss:()=>{},
+    newActivity: true,
+    daily: false
+  });
+  const [activityEditorModalPresent, activityEditorModalDismiss] = useIonModal(ActivityEditorModal, currentEditorSettings);
 
   useEffect(() => {
     //Check if it's current location programmatically
@@ -98,7 +105,9 @@ const Tab2: React.FC = () => {
           d_done: activity.d_done,
           w_done: activity.w_done,
           full: full,
-          focus: activity.focus
+          focus: activity.focus,
+          days: activity.days,
+          active: activity.active,
         }
       });
       var options_simplified = options.map(activity => {
@@ -111,7 +120,9 @@ const Tab2: React.FC = () => {
           d_done: activity.d_done,
           w_done: activity.w_done,
           full: full,
-          focus: activity.focus
+          focus: activity.focus,
+          days: activity.days,
+          active: activity.active,
         }
       });
       setDailies(dailies_simplified);
@@ -151,12 +162,31 @@ const Tab2: React.FC = () => {
       },
     });
   }
+  const OpenActivityEditorModal = (activityData?: SimplifiedActivity, newActivity?:boolean, daily?:boolean) => {
+    setCurrentEditorSettings({
 
+      onDismiss: (data?: string | null | undefined | number, role?: string) => activityEditorModalDismiss(data, role),
+      activityData: activityData,
+      newActivity: newActivity ?? true,
+      daily: daily ?? false
+    });
+    activityEditorModalPresent({
+      cssClass: 'translucent-modal',
+      onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
+        if (ev.detail.role === 'confirm') {
+          console.log("Confirm");
+        }
+      },
+    });
+  }
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
           <IonTitle>Week</IonTitle>
+          <IonButton color="primary" slot='end' shape="round" onClick={e=>OpenActivityEditorModal()}>
+            <IonIcon icon={add} />
+          </IonButton>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen={true} className='ion-padding-top'>
@@ -188,7 +218,7 @@ const Tab2: React.FC = () => {
           <IonCardContent className='ion-no-padding'>
             <IonList>
               {dailies.map((activity, i) => (
-                <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal}/>
+                <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal} edit_func={OpenActivityEditorModal}/>
               ))}
             </IonList>
           </IonCardContent>
@@ -202,7 +232,7 @@ const Tab2: React.FC = () => {
           <IonCardContent className='ion-no-padding'>
         <IonList>
           {weeklies.map((activity, i) => (
-            <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal}/>
+            <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal} edit_func={OpenActivityEditorModal}/>
           ))}
         </IonList>
 </IonCardContent>
