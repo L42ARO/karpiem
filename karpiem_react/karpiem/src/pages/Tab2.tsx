@@ -127,13 +127,7 @@ const Tab2: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonButton slot="start" color="primary">
-            <IonIcon icon={reload} />
-          </IonButton>
           <IonTitle>Week</IonTitle>
-          <IonButton slot="end" color="primary" id="add-activity-trigger">
-            <IonIcon icon={add} />
-          </IonButton>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen={true} className='ion-padding-top'>

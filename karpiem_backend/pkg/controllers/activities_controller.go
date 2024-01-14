@@ -259,8 +259,12 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 			newDDone = activity.DDone
 		}
 	}
-	// Check if the new value is greater than the Poms value
-	if newWDone > activity.WPoms || newDDone > activity.DPoms {
+	check1 := newWDone > activity.WPoms
+	check2 := newDDone > activity.DPoms
+	check3 := request.DayBlocked
+	//Finally we should only be asking for override key if the user is trying to increase the value
+	check4 := (request.DOrW && newDDone > activity.DDone) || (!request.DOrW && newWDone > activity.WDone)
+	if (check1 || check2 || check3) && check4 {
 		log.Println("newWDone: ", newWDone, "activity.WPoms", activity.WPoms, " newDDone: ", newDDone, "activity.DPoms", activity.DPoms)
 		// Check override key
 		if request.OverrideKey != "1234" {

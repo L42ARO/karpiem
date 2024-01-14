@@ -3,7 +3,7 @@ import ExploreContainer from '../components/ExploreContainer';
 import '../theme/custom_global.css';
 import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { useServer } from '../context/serverContext';
-import { FormEventHandler, useEffect, useRef, useState } from 'react';
+import { FormEventHandler, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Activity, GetAllActivitiesResponse, UpdateActivityResponse } from '../context/dataContext';
 
 export interface SimplifiedActivity{
@@ -20,16 +20,27 @@ export interface ActivityItemProps {
   activityData: SimplifiedActivity;
   week_view?: boolean;
   blocked?: boolean;
+  override_func?: (n:number, changeDone: (poms_done: number, override_key?: string) => Promise<void>) => void;
 }
 
-export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view, blocked}:ActivityItemProps) => {
+
+export const ActivityItem:React.FC<ActivityItemProps>= (
+    {activityData, week_view, blocked, override_func}:ActivityItemProps
+) => {
   const [poms_done, setPomsDone] = useState<number>(!week_view?activityData.d_done:activityData.w_done);
   const {serverURL, showToast} = useServer();
   const slider = useRef<HTMLIonItemSlidingElement>(null);
   function ModifyDoneCount(n: number){
-    if ((n<0 && poms_done> 0) || (n>0 && !activityData.full)){
-        if(poms_done + n <= poms_done || !blocked)
+    const check1 = (n<0 && poms_done> 0) || (n>0 && !activityData.full);
+    const check2 = (n<0 || !blocked);
+    if (check1){
+        if (check2){
             setPomsDone(poms_done + n);
+        }
+    }
+    if((!check1 || !check2) && n > 0){
+        showToast("You need to provide permission", "warning");
+        override_func?.(poms_done+n, ChangeDone);
     }
     slider.current?.close();
   }
@@ -81,7 +92,8 @@ export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view
       ChangeDone(poms_done);
     }
   }, [poms_done]);
-  async function ChangeDone(poms_done: number){
+  async function ChangeDone(poms_done: number, override_key?: string){
+        if (!override_key) override_key = "";
       try{
         const res = await fetch(serverURL + '/change_done', {
           method: 'POST',
@@ -92,7 +104,8 @@ export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view
             d_or_w: !week_view,
             id: activityData.id,
             value: poms_done,
-            override_key: "",
+            day_blocked: blocked,
+            override_key: override_key,
             room_id:"123456789"
           })
         });
@@ -106,6 +119,9 @@ export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view
         showToast(`Error changing done count: ${(err as Error).message}`, "danger");
       }
   }
+    // useImperativeHandle(ref, () => ({
+    //     changeDone: ChangeDone,
+    // }));
 
   return <IonItemSliding ref={slider}>
         <IonItemOptions side="start" onIonSwipe={e=>ModifyDoneCount(1)}>
@@ -134,3 +150,5 @@ export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view
         </IonItemOptions>
       </IonItemSliding>
 }
+
+// export const ForwardedActivityItem = forwardRef(ActivityItem);

@@ -1,4 +1,4 @@
-import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToast, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent, useIonToast } from '@ionic/react';
+import { InputChangeEventDetail, InputCustomEvent, IonBadge, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonChip, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonItemOption, IonItemOptions, IonItemSliding, IonLabel, IonList, IonListHeader, IonModal, IonPage, IonRefresher, IonRefresherContent, IonRow, IonSegment, IonSegmentButton, IonTitle, IonToast, IonToolbar, ItemSlidingCustomEvent, RefresherEventDetail, SegmentChangeEventDetail, SegmentCustomEvent, useIonModal, useIonToast } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab1.css';
 import '../theme/custom_global.css';
@@ -9,6 +9,7 @@ import { Activity, GetAllActivitiesResponse, UpdateActivityResponse } from '../c
 import { Setting } from '../context/dataContext';
 import { useLocation } from 'react-router';
 import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
+import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
 
 interface DayActivityResponse{
   id: string;
@@ -33,8 +34,12 @@ const Tab1: React.FC = () => {
   const [options, setOptions] = useState<SimplifiedActivity[]>([]);
   const [total_done, setTotalDone] = useState<number>(0);
   const [day_max, setDayMax] = useState<number>(7);
+  const [displayed_day_max, setDisplayedDayMax] = useState<number>(7);
   const location = useLocation();
   const [day_blocked, setDayBlocked] = useState<boolean>(false);
+  const [overrideModalPresent, overrideModalDismiss] = useIonModal(OverrideModal, {
+    onDismiss: (data:string, role:string)=>overrideModalDismiss(data, role)
+  });
 
   useEffect(() => {
     //Check if it's current location programmatically
@@ -228,23 +233,36 @@ async function getDayActivities() {
     setTotalDone(newTotal);
   }, [habits, options]);
   useEffect(() => {
+    setDisplayedDayMax(day_max);
+  }, [day_max]);
+  useEffect(() => {
     //If the total done is greater than the day max, block the day
     if(total_done >= day_max){
       setDayBlocked(true);
+      setDisplayedDayMax(total_done);
     }
     else{
       setDayBlocked(false);
+      setDisplayedDayMax(day_max);
     }
   }, [total_done]);
+  const OpenOverrideModal = (n: number, changeDone: (poms_done: number, override_key?: string) => Promise<void>) => {
+    overrideModalPresent({
+      cssClass: 'translucent-modal',
+      onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
+        if (ev.detail.role === 'confirm') {
+          const key = ev.detail.data as string;
+          changeDone(n, key);
+        }
+      },
+    });
+  }
 
   return (
     <>
     <IonPage>
       <IonHeader id="header">
         <IonToolbar>
-          <IonButton slot="start" color="primary" id='toast-trig'>
-            <IonIcon icon={reload} />
-          </IonButton>
           <IonTitle>Day</IonTitle>
           <IonButton slot="end" color="primary" id="add-activity-trigger">
             <IonIcon icon={add} />
@@ -258,7 +276,7 @@ async function getDayActivities() {
         </IonRefresher>
         <IonGrid fixed={true}>
           <IonRow className='ion-justify-content-center ion-padding-horizontal'>
-            {Array.from({ length: day_max}, (_, i) => i).map((_, i) => {
+            {Array.from({ length: displayed_day_max}, (_, i) => i).map((_, i) => {
               var mark_done = i < total_done;
               return <IonCol key={i} size="1.5" size-md="1" className='ion-no-padding'>
                 <div className={`pom_circle ${mark_done?"complete":""}`}>
@@ -277,7 +295,7 @@ async function getDayActivities() {
           <IonCardContent className='ion-no-padding'>
             <IonList>
               {habits.map((activity, i) => (
-                <ActivityItem key={activity.id} activityData={activity} blocked={day_blocked}/>
+                <ActivityItem key={activity.id} activityData={activity} blocked={day_blocked} override_func={OpenOverrideModal}/>
               ))}
             </IonList>
           </IonCardContent>
@@ -291,7 +309,7 @@ async function getDayActivities() {
           <IonCardContent className='ion-no-padding'>
         <IonList>
           {options.map((activity, i) => (
-            <ActivityItem key={activity.id} activityData={activity} blocked={day_blocked}/>
+            <ActivityItem key={activity.id} activityData={activity} blocked={day_blocked} override_func={OpenOverrideModal}/>
           ))}
         </IonList>
 </IonCardContent>
@@ -303,6 +321,35 @@ async function getDayActivities() {
   );
 };
 
+const OverrideModal = ({
+  onDismiss,
+}: {
+  onDismiss: (data?: string | null | undefined | number, role?: string) => void;
+}) => {
+  const inputRef = useRef<HTMLIonInputElement>(null);
+  return (
+    <>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonButton color="medium" onClick={() => onDismiss(null, 'cancel')}>
+              Cancel
+            </IonButton>
+          </IonButtons>
+          <IonTitle>Override Action</IonTitle>
+          <IonButtons slot="end">
+            <IonButton onClick={() => onDismiss(inputRef.current?.value, 'confirm')} strong={true}>
+              Confirm
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+      </IonHeader>
+      <IonItem>
+        <IonInput ref={inputRef} labelPlacement="stacked" label="Override Key" placeholder="* * * *" />
+      </IonItem>
+    </>
+  );
+};
 
 interface ActivityData {
   id: string;
@@ -385,7 +432,7 @@ const ActivityEditorModal:React.FC<ActivityEditorModalProps>= ({trigger, newActi
     modal.current?.dismiss();
   }
   return(
-        <IonModal id="add-activity-modal" trigger={trigger} ref={modal}>
+        <IonModal className='translucent-modal' id="add-activity-modal" trigger={trigger} ref={modal}>
           <IonHeader>
             <IonToolbar>
               <IonTitle slot="start">Add Activity</IonTitle>
