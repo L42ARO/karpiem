@@ -25,7 +25,7 @@ func CreateActivityHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Determine Poms based on Daily flag
-	if request.Daily {
+	if request.Daily && request.Poms == 0{
 		request.Poms = 7 * request.Max
 	}
 
@@ -59,7 +59,7 @@ func CreateActivityHandler(w http.ResponseWriter, r *http.Request) {
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil{
-			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
 		for _, conn := range WS_Rooms[request.RoomID]{
 			//Send the message with the prefix SINGLE_UPDATE:
@@ -296,8 +296,7 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil{
-			log.Println("Error stringifying response")
-			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
 		for _, conn := range WS_Rooms[request.RoomID]{
 			//Send the message with the prefix SINGLE_UPDATE:
@@ -420,7 +419,7 @@ func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil{
-			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
 		for _, conn := range WS_Rooms[request.RoomID]{
 			//Send the message with the prefix SINGLE_UPDATE:
@@ -475,7 +474,7 @@ func UpdateActivityHandler(w http.ResponseWriter, r *http.Request){
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil{
-			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
 		for _, conn := range WS_Rooms[request.RoomID]{
 			//Send the message with the prefix SINGLE_UPDATE:
@@ -537,7 +536,7 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil{
-			http.Error(w, "Error broadcasting change", http.StatusInternalServerError)
+			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
 		for _, conn := range WS_Rooms[request.RoomID]{
 			//Send the message with the prefix SINGLE_UPDATE:
