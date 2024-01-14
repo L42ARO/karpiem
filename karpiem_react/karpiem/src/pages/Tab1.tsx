@@ -20,7 +20,7 @@ interface DayActivityResponse{
 }
 
 interface DayActivitiesResponse{
-  dailies: DayActivityResponse[];
+  habits: DayActivityResponse[];
   options: DayActivityResponse[];
   total_poms: number;
   total_done: number;
@@ -29,7 +29,7 @@ interface DayActivitiesResponse{
 const Tab1: React.FC = () => {
   const {socket, connect, disconnect, serverURL, showToast} = useServer();
   // const [dayActivitiesResponse, setDayActivitiesResponse] = useState<DayActivitiesResponse>();
-  const [dailies, setDailies] = useState<SimplifiedActivity[]>([]);
+  const [habits, setHabits] = useState<SimplifiedActivity[]>([]);
   const [options, setOptions] = useState<SimplifiedActivity[]>([]);
   const [total_done, setTotalDone] = useState<number>(0);
   const [day_max, setDayMax] = useState<number>(7);
@@ -58,11 +58,11 @@ const Tab1: React.FC = () => {
       if (key === "SINGLE_UPDATE"){
         //VAlue is a json string
         var activity_res = JSON.parse(value) as UpdateActivityResponse;
-        //Go through the dailies and weeklies and update the ones that match the updated activity id
+        //Go through the habits and options and update the ones that match the updated activity id
         if(activity_res){
-          setDailies(prevState => {
-            //Check for the activity in the dailies and only update d_done
-            const updatedDailies = prevState?.map(activity=>{
+          setHabits(prevState => {
+            //Check for the activity in the habits and only update d_done
+            const updatedhabits = prevState?.map(activity=>{
               const updated_activity = activity_res.updated_activity;
               if(activity.id === updated_activity.id){
                 var full = updated_activity.d_done >= updated_activity.d_poms || updated_activity.w_done >= updated_activity.w_poms;
@@ -75,7 +75,7 @@ const Tab1: React.FC = () => {
               }
               return activity;
             })
-            return updatedDailies;
+            return updatedhabits;
           })
           setOptions(prevState => {
             const updatedOptions = prevState?.map(activity=>{
@@ -91,7 +91,7 @@ const Tab1: React.FC = () => {
               }
               return activity;
             });
-            // const updatedResponse = {...prevState, dailies: updatedDailies, options: updatedOptions} as DayActivitiesResponse;
+            // const updatedResponse = {...prevState, habits: updatedDailies, options: updatedOptions} as DayActivitiesResponse;
             return updatedOptions;
           });
         }
@@ -173,13 +173,13 @@ async function getDayActivities() {
           return a.focus ? -1 : 1;
         }
       });
-      //Separate the dailies and weeklies
+      //Separate the habits and weeklies
       //If d_poms * 7 == len(days) then it is a daily
-      var dailies = data.activities.filter(activity => activity.days.length == activity.d_poms*7);
+      var habits = data.activities.filter(activity => activity.days.length == activity.d_poms*7);
       //Otherwise it is a weekly a.k.a optional for the day
       var options = data.activities.filter(activity => activity.days.length != activity.d_poms*7);
       //Convert the activities to a simplified version
-      var dailies_simplified = dailies.map(activity => {
+      var habits_simplified = habits.map(activity => {
         var full = activity.d_done >= activity.d_poms || activity.w_done >= activity.w_poms;
         return {
           id: activity.id,
@@ -205,7 +205,7 @@ async function getDayActivities() {
           focus: activity.focus
         }
       });
-      setDailies(dailies_simplified);
+      setHabits(habits_simplified);
       setOptions(options_simplified);
       
     } catch (error) {
@@ -216,16 +216,16 @@ async function getDayActivities() {
   }
 
   useEffect(() => {
-    //Update the done count, go through the dailies and weeklies and update the ones that match the updated activity id
+    //Update the done count, go through the habits and weeklies and update the ones that match the updated activity id
     var newTotal = 0;
-    dailies.forEach(activity=>{
+    habits.forEach(activity=>{
       newTotal += activity.d_done;
     });
     options.forEach(activity=>{
       newTotal += activity.d_done;
     });
     setTotalDone(newTotal);
-  }, [dailies, options]);
+  }, [habits, options]);
 
   return (
     <>
@@ -266,7 +266,7 @@ async function getDayActivities() {
         </IonHeader>
           <IonCardContent className='ion-no-padding'>
             <IonList>
-              {dailies.map((activity, i) => (
+              {habits.map((activity, i) => (
                 <ActivityItem key={activity.id} activityData={activity}/>
               ))}
             </IonList>

@@ -22,7 +22,7 @@ export interface ActivityItemProps {
 }
 
 export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view}:ActivityItemProps) => {
-  const [poms_done, setPomsDone] = useState<number>(activityData.d_done);
+  const [poms_done, setPomsDone] = useState<number>(!week_view?activityData.d_done:activityData.w_done);
   const {serverURL, showToast} = useServer();
   const slider = useRef<HTMLIonItemSlidingElement>(null);
   function ModifyDoneCount(n: number){
@@ -63,12 +63,18 @@ export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view
     }
   }
   useEffect(() => {
-    if(activityData.d_done != poms_done)
-      setPomsDone(activityData.d_done);
+    if(!week_view){
+        if(activityData.d_done != poms_done)
+        setPomsDone(activityData.d_done);
+    }
+    else{
+        if(activityData.w_done != poms_done)
+            setPomsDone(activityData.w_done);
+    }
   }, [activityData]);
 
   useEffect(() => {
-    if(poms_done != activityData.d_done){
+    if((!week_view && poms_done != activityData.d_done)||(week_view && poms_done != activityData.w_done)){
       //Send updated done count to server
       ChangeDone(poms_done);
     }
@@ -113,7 +119,9 @@ export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view
          <IonItem id="update-modal-trigger" color={activityData.focus ? "primary":activityData.full ? "danger":""}>
           <IonLabel slot='start'>{activityData.name}</IonLabel>
           <IonChip slot='end' color={activityData.focus ? "dark": activityData.full?"dark":"primary"}>
-            {!week_view?activityData.d_done:activityData.w_done} / {!week_view?activityData.d_poms:activityData.w_poms}
+            {!week_view?activityData.d_done:activityData.w_done}
+            /
+            {!week_view?activityData.d_poms:activityData.w_poms}
           </IonChip>
         </IonItem>
 

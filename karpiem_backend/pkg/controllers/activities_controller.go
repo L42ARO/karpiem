@@ -255,6 +255,8 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 		newWDone = int64(request.Value)
 		if int64(request.Value) < activity.DDone {
 			newDDone = int64(request.Value) //Eg: if we request the week poms to lower from 3 to 1 and the day poms is 2, we need to lower the day poms to 1
+		}else{
+			newDDone = activity.DDone
 		}
 	}
 	// Check if the new value is greater than the Poms value
@@ -269,6 +271,7 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update the Done field with the new value
+	log.Println("Updating with-> newWDone: ", newWDone, " newDDone: ", newDDone)
 	activity.WDone = newWDone
 	activity.DDone = newDDone
 

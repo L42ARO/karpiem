@@ -6,6 +6,8 @@ import { add, reload, remove, timeOutline } from 'ionicons/icons';
 import { useEffect, useState } from 'react';
 import { useServer } from '../context/serverContext';
 import { useLocation } from 'react-router';
+import { GetAllActivitiesResponse } from '../context/dataContext';
+import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
 
 interface WeekActivityResponse{
   id: string;
@@ -24,7 +26,9 @@ interface WeekActivitiesResponse{
 const Tab2: React.FC = () => {
   const [today, setToday] = useState<'M' | 'T' | 'W' | 'R' | 'F' | 'S' | 'U'>('M');
   const {serverURL, showToast} = useServer();
-  const [weekActivitiesResponse, setWeekActivitiesResponse] = useState<WeekActivitiesResponse>();
+  // const [weekActivitiesResponse, setWeekActivitiesResponse] = useState<WeekActivitiesResponse>();
+  const [dailies, setDailies] = useState<SimplifiedActivity[]>([]);
+  const [weeklies, setWeeklies] = useState<SimplifiedActivity[]>([]);
   const [total_poms, setTotalPoms] = useState<number>(0);
   const [total_done, setTotalDone] = useState<number>(0);
   const location = useLocation();
@@ -47,46 +51,75 @@ const Tab2: React.FC = () => {
     await getWeekActivities();
     event.detail.complete();
   }
+
   //Make async function to get week activities
-  async function getWeekActivities(){
-    try{
-      const res = await fetch(serverURL + '/week_activities');
-      if (!res.ok){
-        const txt = await res.text();
-        throw new Error(txt);
-      }
-      const data: WeekActivitiesResponse = await res.json();
-      data.dailies.sort((a, b) => {
-        if (a.focus === b.focus) {
-          if (a.full === b.full) {
-            return 0; 
-          } else {
-            return a.full ? 1 : -1;
-          }
-        } else {
-          return a.focus ? -1 : 1;
-        }
-      });
-      data.weeklies.sort((a, b) => {
-        if (a.focus === b.focus) {
-          if (a.full === b.full) {
-            return 0; 
-          } else {
-            return a.full ? 1 : -1;
-          }
-        } else {
-          return a.focus ? -1 : 1;
-        }
-      });
-    console.log(data);
-    setWeekActivitiesResponse(data);
-    setTotalPoms(data.total_poms);
-    setTotalDone(data.total_done);
-    return data;
+  async function getWeekActivities() {
+  var today = new Date().getDay()-1;
+  if(today < 0) today = 6;
+  //Get the day as M, T, W, R, F, S, U
+  var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
+
+  try {
+    const response = await fetch(serverURL + '/get_all_activities');
+    if (!response.ok){
+      var resTxt = await response.text();
+      throw new Error(resTxt);
     }
-    catch(err){
-      console.log(err);
-      showToast(`Error getting week activities: ${(err as Error).message}`, "danger")
+    const data = await response.json() as GetAllActivitiesResponse;
+      //Filter the activities to only include the ones that are active and have the day in their days
+      data.activities = data.activities.filter(activity => activity.active && activity.days.indexOf(day) > -1);
+      data.activities.sort((a, b) => {
+        if (a.focus === b.focus) {
+          const a_full = a.w_done >= a.w_poms;
+          const b_full = b.w_done >= b.w_poms;
+          if (a_full === b_full) {
+            return 0; 
+          } else {
+            return a_full ? 1 : -1;
+          }
+        } else {
+          return a.focus ? -1 : 1;
+        }
+      });
+      //Separate the dailies and weeklies
+      //If d_poms * 7 == len(days) then it is a daily
+      var dailies = data.activities.filter(activity => activity.days.length == activity.d_poms*7);
+      //Otherwise it is a weekly a.k.a optional for the day
+      var options = data.activities.filter(activity => activity.days.length != activity.d_poms*7);
+      //Convert the activities to a simplified version
+      var dailies_simplified = dailies.map(activity => {
+        var full = activity.w_done >= activity.w_poms;
+        return {
+          id: activity.id,
+          name: activity.name,
+          d_poms: activity.d_poms,
+          w_poms: activity.w_poms,
+          d_done: activity.d_done,
+          w_done: activity.w_done,
+          full: full,
+          focus: activity.focus
+        }
+      });
+      var options_simplified = options.map(activity => {
+        var full = activity.w_done >= activity.w_poms;
+        return {
+          id: activity.id,
+          name: activity.name,
+          d_poms: activity.d_poms,
+          w_poms: activity.w_poms,
+          d_done: activity.d_done,
+          w_done: activity.w_done,
+          full: full,
+          focus: activity.focus
+        }
+      });
+      setDailies(dailies_simplified);
+      setWeeklies(options_simplified);
+      
+    } catch (error) {
+      console.log(error);
+      // presentToastInfo((error as Error).message);
+      showToast(`Error getting day activities: ${(error as Error).message}`, "danger");
     }
   }
 
@@ -131,8 +164,8 @@ const Tab2: React.FC = () => {
         </IonHeader>
           <IonCardContent className='ion-no-padding'>
             <IonList>
-              {weekActivitiesResponse?.dailies.map((activity, i) => (
-                <Activity key={activity.id} activityData={activity}/>
+              {dailies.map((activity, i) => (
+                <ActivityItem key={activity.id} activityData={activity} week_view/>
               ))}
             </IonList>
           </IonCardContent>
@@ -145,8 +178,8 @@ const Tab2: React.FC = () => {
         </IonHeader>
           <IonCardContent className='ion-no-padding'>
         <IonList>
-          {weekActivitiesResponse?.weeklies.map((activity, i) => (
-            <Activity key={activity.id} activityData={activity}/>
+          {weeklies.map((activity, i) => (
+            <ActivityItem key={activity.id} activityData={activity} week_view={true}/>
           ))}
         </IonList>
 </IonCardContent>
@@ -156,33 +189,33 @@ const Tab2: React.FC = () => {
   );
 };
 
-interface ActivityProps {
-  activityData: WeekActivityResponse;
-  onClick?: (activity: WeekActivityResponse)=>void;
-}
+// interface ActivityProps {
+//   activityData: WeekActivityResponse;
+//   onClick?: (activity: WeekActivityResponse)=>void;
+// }
 
-const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) => {
-  return <IonItemSliding onClick={e=>{
-    e.preventDefault();
-    if (onClick) onClick(activityData);
-  }}>
-        <IonItemOptions side="start">
-          <IonItemOption color="success">
-            <IonIcon icon={add}/>
-          </IonItemOption>
-        </IonItemOptions>
+// const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) => {
+//   return <IonItemSliding onClick={e=>{
+//     e.preventDefault();
+//     if (onClick) onClick(activityData);
+//   }}>
+//         <IonItemOptions side="start">
+//           <IonItemOption color="success">
+//             <IonIcon icon={add}/>
+//           </IonItemOption>
+//         </IonItemOptions>
 
-         <IonItem id="update-modal-trigger">
-          <IonLabel slot='start'>{activityData.name}</IonLabel>
-          <IonChip slot='end' color='primary'>{activityData.w_done} / {activityData.w_poms}</IonChip>
-        </IonItem>
+//          <IonItem id="update-modal-trigger">
+//           <IonLabel slot='start'>{activityData.name}</IonLabel>
+//           <IonChip slot='end' color='primary'>{activityData.w_done} / {activityData.w_poms}</IonChip>
+//         </IonItem>
 
-        <IonItemOptions side="end">
-          <IonItemOption color="danger">
-            <IonIcon icon={remove}/>
-          </IonItemOption>
-        </IonItemOptions>
-      </IonItemSliding>
-}
+//         <IonItemOptions side="end">
+//           <IonItemOption color="danger">
+//             <IonIcon icon={remove}/>
+//           </IonItemOption>
+//         </IonItemOptions>
+//       </IonItemSliding>
+// }
 
 export default Tab2;
