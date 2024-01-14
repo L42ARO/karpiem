@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "deploy-prod":"ionic build && netlify deploy --dir=dist --prod",
+    "deploy-test":"ionic build && netlify deploy --dir=dist",
     "preview": "vite preview",
     "test.e2e": "cypress run",
     "test.unit": "vitest",
