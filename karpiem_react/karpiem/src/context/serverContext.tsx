@@ -43,10 +43,9 @@ export const ServerProvider: React.FC<ServerProviderProps> = ({ children }) => {
     const item: ToastQueueItem = {msg, color};
     setToastQueue((prev)=>{
       //Make sure the last item in the queue isn't the same as this one
-      if (prev.length > 0 && prev[prev.length-1].msg === msg){
+      if ((prev.length > 0 && prev[prev.length-1].msg === msg) || (prev.length > 1 && prev[prev.length-2].msg === msg)){
         return prev;
       }
-      console.log("Adding toast", msg, "to", prev);
       return [...prev, item];
 
     });

@@ -23,7 +23,7 @@ interface WeekActivitiesResponse{
 }
 const Tab2: React.FC = () => {
   const [today, setToday] = useState<'M' | 'T' | 'W' | 'R' | 'F' | 'S' | 'U'>('M');
-  const {serverURL} = useServer();
+  const {serverURL, showToast} = useServer();
   const [weekActivitiesResponse, setWeekActivitiesResponse] = useState<WeekActivitiesResponse>();
   const [total_poms, setTotalPoms] = useState<number>(0);
   const [total_done, setTotalDone] = useState<number>(0);
@@ -50,9 +50,13 @@ const Tab2: React.FC = () => {
   //Make async function to get week activities
   async function getWeekActivities(){
     try{
-    const res = await fetch(serverURL + '/week_activities');
-    const data: WeekActivitiesResponse = await res.json();
-    data.dailies.sort((a, b) => {
+      const res = await fetch(serverURL + '/week_activities');
+      if (!res.ok){
+        const txt = await res.text();
+        throw new Error(txt);
+      }
+      const data: WeekActivitiesResponse = await res.json();
+      data.dailies.sort((a, b) => {
         if (a.focus === b.focus) {
           if (a.full === b.full) {
             return 0; 
@@ -82,6 +86,7 @@ const Tab2: React.FC = () => {
     }
     catch(err){
       console.log(err);
+      showToast(`Error getting week activities: ${(err as Error).message}`, "danger")
     }
   }
 

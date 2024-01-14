@@ -8,7 +8,7 @@ import React, {useEffect, useRef} from 'react';
 import { useLocation } from 'react-router';
 
 const Tab3: React.FC = () => {
-  var {serverURL} = useServer();
+  var {serverURL, showToast} = useServer();
   //Make async function to reset day counts
   const max_ref = useRef<HTMLIonInputElement>(null);
   const daysRefs = ["M", "T", "W", "R", "F", "S", "U"].map((day, index) => useRef<HTMLIonInputElement>(null));
@@ -42,39 +42,47 @@ const Tab3: React.FC = () => {
   async function getSettings(){
     try{
       const res = await fetch(serverURL + '/get_setting');
-      if (res.ok){
-        const data = await res.json();
-        setSettings(data);
-        console.log(data as Setting);
+      if (!res.ok){
+        const txt = await res.text();
+        throw new Error(txt);
       }
-      else{
-        throw new Error("Error getting settings");
-      }
+      const data = await res.json();
+      setSettings(data);
+      console.log(data as Setting);
     }
     catch(err){
       console.log(err);
+      showToast(`Error getting setting: ${(err as Error).message}`, "danger")
     }
   }
 
     
   async function resetDayCounts(){
-    const res = await fetch(serverURL + '/reset_day?room_id='+"123456789");
-    //There won't be any data to return just the OK status
-    if (res.ok){
+    try{
+      const res = await fetch(serverURL + '/reset_day?room_id='+"123456789");
+      //There won't be any data to return just the OK status
+      if (!res.ok){
+        const txt = await res.text();
+        throw new Error(txt);
+      }
       console.log("Day counts reset");
-    }
-    else{
-      console.log("Error resetting day counts");
+    }catch(err){
+      console.log(err);
+      showToast(`Error resetting day counts: ${(err as Error).message}`, "danger")
     }
   }
   async function resetWeekCounts(){
-    const res = await fetch(serverURL + '/reset_week?room_id='+"123456789");
-    //There won't be any data to return just the OK status
-    if (res.ok){
+    try{
+      const res = await fetch(serverURL + '/reset_week?room_id='+"123456789");
+      //There won't be any data to return just the OK status
+      if (!res.ok){
+        const txt = await res.text();
+        throw new Error(txt);
+      }
       console.log("Week counts reset");
-    }
-    else{
-      console.log("Error resetting week counts");
+    }catch(err){
+      console.log(err);
+      showToast(`Error resetting week counts: ${(err as Error).message}`, "danger")
     }
   }
   async function settingsChange(){
@@ -107,18 +115,18 @@ const Tab3: React.FC = () => {
       if (res.ok){
         console.log("Settings updated");
       }
-      else if(res.status == 207){
+      else if(res.status == 207){ //Multi-status
         console.log("Settings updated, but issue with WebSockets");
       }
       else{
-        throw new Error("Error updating settings");
-        //Reload the site
-        throw new Error("Error updating settings");
-        window.location.reload();
+        const txt = await res.text();
+        throw new Error(txt);
+        
       }
     }
     catch(err){
       console.log(err);
+      showToast(`Error updating settings: ${(err as Error).message}`, "danger")
     }
   }
   return (

@@ -5,7 +5,7 @@ import '../theme/custom_global.css';
 import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useServer } from '../context/serverContext';
-import { UpdateActivityResponse } from '../context/dataContext';
+import { Activity, UpdateActivityResponse } from '../context/dataContext';
 import { Setting } from '../context/dataContext';
 import { useLocation } from 'react-router';
 
@@ -115,30 +115,26 @@ const Tab1: React.FC = () => {
   async function getSettings(){
     try{
       const res = await fetch(serverURL + '/get_setting');
-      if (res.ok){
-        const data = await res.json() as Setting;
-        //Parse the days_max from the settings
-        const days_max = data.days_max;
-        //Convert the days_max to a number array
-        var days_max_array = [];
-        for (var i = 0; i < days_max.length; i+=2){
-          days_max_array.push(parseInt(days_max.substring(i, i+2), 16));
-        }
-        //Depending on the day of the week, set the day_max (Monday is 0, Sunday is 6)
-        var day = new Date().getDay()-1;
-        if(day < 0) day = 6;
-        setDayMax(days_max_array[day]);
-
-      }
-      else{
+      if (!res.ok){
         var resTxt = await res.text();
-        throw new Error("Error getting settings:" + resTxt);
+        throw new Error(resTxt);
       }
+      const data = await res.json() as Setting;
+      //Parse the days_max from the settings
+      const days_max = data.days_max;
+      //Convert the days_max to a number array
+      var days_max_array = [];
+      for (var i = 0; i < days_max.length; i+=2){
+        days_max_array.push(parseInt(days_max.substring(i, i+2), 16));
+      }
+      //Depending on the day of the week, set the day_max (Monday is 0, Sunday is 6)
+      var day = new Date().getDay()-1;
+      if(day < 0) day = 6;
+      setDayMax(days_max_array[day]);
     }
     catch(err){
       console.log(err);
-      //Present a toast with the error
-      showToast((err as Error).message, "danger");
+      showToast(`Error getting settings: ${(err as Error).message}`, "danger");
     }
   }
 async function getDayActivities() {
@@ -151,7 +147,7 @@ async function getDayActivities() {
     const response = await fetch(serverURL + '/day_activities?current_day='+ day);
     if (!response.ok){
       var resTxt = await response.text();
-      throw new Error("Error getting day activities:" + resTxt);
+      throw new Error(resTxt);
     }
     const data = await response.json() as DayActivitiesResponse;
       data.dailies.sort((a, b) => {
@@ -180,7 +176,7 @@ async function getDayActivities() {
     } catch (error) {
       console.log(error);
       // presentToastInfo((error as Error).message);
-      showToast((error as Error).message, "danger");
+      showToast(`Error getting day activities: ${(error as Error).message}`, "danger");
     }
   }
 
@@ -240,7 +236,7 @@ async function getDayActivities() {
           <IonCardContent className='ion-no-padding'>
             <IonList>
               {dayActivitiesResponse?.dailies.map((activity, i) => (
-                <Activity key={activity.id} activityData={activity}/>
+                <ActivityItem key={activity.id} activityData={activity}/>
               ))}
             </IonList>
           </IonCardContent>
@@ -254,7 +250,7 @@ async function getDayActivities() {
           <IonCardContent className='ion-no-padding'>
         <IonList>
           {dayActivitiesResponse?.options.map((activity, i) => (
-            <Activity key={activity.id} activityData={activity}/>
+            <ActivityItem key={activity.id} activityData={activity}/>
           ))}
         </IonList>
 </IonCardContent>
@@ -270,9 +266,9 @@ interface ActivityProps {
   onClick?: (activity: DayActivityResponse)=>void;
 }
 
-const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) => {
+const ActivityItem:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) => {
   const [poms_done, setPomsDone] = useState<number>(activityData.d_done);
-  const {serverURL} = useServer();
+  const {serverURL, showToast} = useServer();
   const slider = useRef<HTMLIonItemSlidingElement>(null);
   function ModifyDoneCount(n: number){
     if ((n<0 && poms_done> 0) || (n>0 && !activityData.full)){
@@ -282,32 +278,35 @@ const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) 
   }
   async function FocusActivity(){
     var focus = !activityData.focus;
-    var res = await fetch(serverURL + '/focus_activity', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        id: activityData.id,
-        focus: focus,
-        room_id:"123456789"
+    try{
+      var res = await fetch(serverURL + '/focus_activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: activityData.id,
+          focus: focus,
+          room_id:"123456789"
+        })
       })
-    })
-    if (res.ok){
-      const data: DayActivityResponse = await res.json();
-      console.log(data);
-    }
-    else if(res.status == 400){ //Bad request
-      //Try to get the json data
-      try{
-        const data = await res.json();
+      if (res.ok){
+        const data: DayActivityResponse = await res.json();
         console.log(data);
       }
-      catch(error){
-        console.log(error);
+      else if(res.status == 409){ //Conflict
+        const data = await res.json() as Activity;
+        showToast(`Activity ${data.name} already in focus`, "primary");
       }
+      else{
+        const txt = await res.text();
+        throw new Error(txt);
+      }
+      slider.current?.close();
+    }catch(err){
+      console.log(err);
+      showToast(`Error focusing: ${(err as Error).message}`, "danger");
     }
-    slider.current?.close();
   }
   useEffect(() => {
     console.log("Updating done count with incoming data");
@@ -318,21 +317,35 @@ const Activity:React.FC<ActivityProps>= ({activityData, onClick}:ActivityProps) 
   useEffect(() => {
     if(poms_done != activityData.d_done){
       //Send updated done count to server
-      fetch(serverURL + '/change_done', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          d_or_w: true,
-          id: activityData.id,
-          value: poms_done,
-          override_key: "",
-          room_id:"123456789"
-        })
-      })
+      ChangeDone(poms_done);
     }
   }, [poms_done]);
+  async function ChangeDone(poms_done: number){
+      try{
+        const res = await fetch(serverURL + '/change_done', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            d_or_w: true,
+            id: activityData.id,
+            value: poms_done,
+            override_key: "",
+            room_id:"123456789"
+          })
+        });
+        if (!res.ok){
+          const txt = await res.text();
+          throw new Error(txt);
+        }
+
+      }catch(err){
+        console.log(err);
+        showToast(`Error changing done count: ${(err as Error).message}`, "danger");
+      }
+  }
+
   return <IonItemSliding 
   ref={slider}
   onClick={e=>{

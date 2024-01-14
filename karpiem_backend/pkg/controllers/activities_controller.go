@@ -485,7 +485,7 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 		}
 		if result.RowsAffected != 0{
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusConflict)
 			json.NewEncoder(w).Encode(other_focus)
 			return
 		}

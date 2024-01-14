@@ -12,7 +12,7 @@ type Activity struct {
 	Focus       bool
 }
 */
-interface Activity{
+export interface Activity{
     id: string;
     active: boolean;
     name: string;
