@@ -16,7 +16,7 @@ export const OverrideModal = ({
               Cancel
             </IonButton>
           </IonButtons>
-          <IonTitle>Override Action</IonTitle>
+          <IonTitle>Override</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={() => onDismiss(inputRef.current?.value, 'confirm')} strong={true}>
               Confirm
