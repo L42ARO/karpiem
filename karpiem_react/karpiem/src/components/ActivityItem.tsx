@@ -18,16 +18,18 @@ export interface SimplifiedActivity{
 }
 export interface ActivityItemProps {
   activityData: SimplifiedActivity;
-  week_view?: boolean
+  week_view?: boolean;
+  blocked?: boolean;
 }
 
-export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view}:ActivityItemProps) => {
+export const ActivityItem:React.FC<ActivityItemProps>= ({activityData, week_view, blocked}:ActivityItemProps) => {
   const [poms_done, setPomsDone] = useState<number>(!week_view?activityData.d_done:activityData.w_done);
   const {serverURL, showToast} = useServer();
   const slider = useRef<HTMLIonItemSlidingElement>(null);
   function ModifyDoneCount(n: number){
     if ((n<0 && poms_done> 0) || (n>0 && !activityData.full)){
-      setPomsDone(poms_done + n);
+        if(poms_done + n <= poms_done || !blocked)
+            setPomsDone(poms_done + n);
     }
     slider.current?.close();
   }

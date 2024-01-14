@@ -34,6 +34,7 @@ const Tab1: React.FC = () => {
   const [total_done, setTotalDone] = useState<number>(0);
   const [day_max, setDayMax] = useState<number>(7);
   const location = useLocation();
+  const [day_blocked, setDayBlocked] = useState<boolean>(false);
 
   useEffect(() => {
     //Check if it's current location programmatically
@@ -226,6 +227,15 @@ async function getDayActivities() {
     });
     setTotalDone(newTotal);
   }, [habits, options]);
+  useEffect(() => {
+    //If the total done is greater than the day max, block the day
+    if(total_done >= day_max){
+      setDayBlocked(true);
+    }
+    else{
+      setDayBlocked(false);
+    }
+  }, [total_done]);
 
   return (
     <>
@@ -267,7 +277,7 @@ async function getDayActivities() {
           <IonCardContent className='ion-no-padding'>
             <IonList>
               {habits.map((activity, i) => (
-                <ActivityItem key={activity.id} activityData={activity}/>
+                <ActivityItem key={activity.id} activityData={activity} blocked={day_blocked}/>
               ))}
             </IonList>
           </IonCardContent>
@@ -281,7 +291,7 @@ async function getDayActivities() {
           <IonCardContent className='ion-no-padding'>
         <IonList>
           {options.map((activity, i) => (
-            <ActivityItem key={activity.id} activityData={activity}/>
+            <ActivityItem key={activity.id} activityData={activity} blocked={day_blocked}/>
           ))}
         </IonList>
 </IonCardContent>
