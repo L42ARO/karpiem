@@ -64,3 +64,23 @@ export interface UpdateActivityRequest{
     max: number;
     room_id: string;
 }
+
+
+// DeleteActivityRequest golang:
+/* type DeleteActivityRequest struct {
+	ID string `json:"id"`
+	RoomID string `json:"room_id"`
+}*/
+export interface DeleteActivityRequest{
+    id: string;
+    room_id: string;
+}
+// DeleteActivityResponse golang:
+/* type DeleteActivityResponse struct {
+	Deleted_ID string `json:"deleted_id"`
+    Deleted_Name string `json:"deleted_name"`
+}*/
+export interface DeleteActivityResponse{
+    deleted_id: string;
+    deleted_name: string;
+}

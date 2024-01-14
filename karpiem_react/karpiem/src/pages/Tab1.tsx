@@ -5,7 +5,7 @@ import '../theme/custom_global.css';
 import { add, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useServer } from '../context/serverContext';
-import { Activity, GetAllActivitiesResponse, UpdateActivityRequest, UpdateActivityResponse } from '../context/dataContext';
+import { Activity, DeleteActivityResponse, GetAllActivitiesResponse, UpdateActivityRequest, UpdateActivityResponse } from '../context/dataContext';
 import { Setting } from '../context/dataContext';
 import { useLocation } from 'react-router';
 import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
@@ -128,6 +128,18 @@ const Tab1: React.FC = () => {
       }
       if(key === "SINGLE_DELETE"){
         console.log("DELETE:",value);
+        const res = JSON.parse(value) as DeleteActivityResponse;
+        //Go through the habits and options and delete the ones that match the deleted activity id
+        if(res){
+          setHabits(prevState => {
+            const updatedHabits = prevState?.filter(activity => activity.id !== res.deleted_id);
+            return updatedHabits;
+          });
+          setOptions(prevState => {
+            const updatedOptions = prevState?.filter(activity => activity.id !== res.deleted_id);
+            return updatedOptions;
+          });
+        }
       }
       if(key === "BATCH_RESET"){
         console.log("RESETING:",value);

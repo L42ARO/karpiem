@@ -393,29 +393,31 @@ func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
 	deleteId := request.ID
 
 	db := data.GetDB()
+	//Get the name of the activity to be deleted
+	var activity data.Activity
+	result := db.Where("id = ?", deleteId).First(&activity)
+	if result.Error != nil {
+		http.Error(w, "Activity not found", http.StatusNotFound)
+		return
+	}
+	//Get the name of the activity
+	activity_name := activity.Name
+
+	//Delete the activity
 	delete_res:= db.Where("id = ?", deleteId).Delete(&data.Activity{})
 	if delete_res.Error != nil {
 		http.Error(w, "Failed to delete activity", http.StatusInternalServerError)
 		return
 	}
 
-	// Check the id no longer exists
-	var activity data.Activity
-	result := db.Where("id = ?", deleteId).First(&activity)
-	if result.Error != nil && result.Error.Error() != "record not found" {
-		http.Error(w, "Error during delete check", http.StatusInternalServerError)
-		return
-	}
-	if result.RowsAffected != 0 {
-		http.Error(w, "Failed to delete activity", http.StatusInternalServerError)
-		return
-	}
 	//Broadcast the change to all the clients in the room
 	//Check if the room exists
+	var response models.DeleteActivityResponse
+	response.Deleted_ID = deleteId
+	response.Deleted_Name = activity_name
+
 	if WS_Rooms[request.RoomID] != nil {
 		//Send the message to all the clients in the room
-		var response models.DeleteActivityResponse
-		response.Deleted_ID = deleteId
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil{
@@ -428,6 +430,9 @@ func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+
 }
 
 func UpdateActivityHandler(w http.ResponseWriter, r *http.Request){

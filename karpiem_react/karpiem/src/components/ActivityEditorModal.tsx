@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { SimplifiedActivity } from "./ActivityItem";
 import { useServer } from "../context/serverContext";
-import { InputCustomEvent, IonButton, IonButtons, IonCol, IonGrid, IonHeader, IonInput, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton, IonTitle, IonToggle, IonToolbar, SegmentCustomEvent } from "@ionic/react";
-import { Activity, UpdateActivityRequest } from "../context/dataContext";
+import { InputCustomEvent, IonButton, IonButtons, IonCol, IonFooter, IonGrid, IonHeader, IonInput, IonItem, IonLabel, IonList, IonSegment, IonSegmentButton, IonTitle, IonToggle, IonToolbar, SegmentCustomEvent } from "@ionic/react";
+import { Activity, DeleteActivityRequest, DeleteActivityResponse, UpdateActivityRequest } from "../context/dataContext";
 
 export interface ActivityEditorModalProps{
   onDismiss: (data?: string | null | undefined | number, role?: string) => void;
@@ -152,6 +152,38 @@ export const ActivityEditorModal = ({
       setPoms(maxDaily*7);
     }
   }, [maxDaily]);
+  async function DeleteActivity(){
+    if(!activityData) return;
+    var request:DeleteActivityRequest={
+        id: activityData.id,
+        room_id: "123456789"
+    }
+    try{
+      var res = await fetch(serverURL + '/delete_activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(request)
+      })
+      if (res.ok){
+        const data: DeleteActivityResponse= await res.json();
+        //Double check the id is the same
+        if (data.deleted_id !== activityData.id){
+          throw new Error("Deleted activity id does not match");
+        }
+        showToast(`Activity ${data.deleted_name} deleted`, "primary");
+        onDismiss();
+      }
+      else{
+        const txt = await res.text();
+        throw new Error(txt);
+      }
+    }catch(err){
+      console.log(err);
+      showToast(`Error deleting activity: ${(err as Error).message}`, "danger");
+    }
+  }
   return(
         // <IonModal className='translucent-modal' id="add-activity-modal" trigger={trigger} ref={modal}>
         <>
@@ -181,11 +213,6 @@ export const ActivityEditorModal = ({
                 <IonLabel position='stacked'>Activity Name</IonLabel>
                 <IonInput ref={activityNameRef} aria-label="Activity Name" value={activityName} onIonInput={updateActivityName}></IonInput>
               </IonItem>
-              {!newActivity&&
-                <IonItem>
-                  <IonToggle enableOnOffLabels={true} checked={activityActive} onIonChange={updateActivityActive}>Active</IonToggle>;
-                </IonItem>
-              }
               {activityType === 'weekly' && (
               <IonItem>
                 <IonLabel slot='start'>Max Week Poms</IonLabel>
@@ -211,6 +238,18 @@ export const ActivityEditorModal = ({
                 </IonGrid>
               </IonItem>
             </IonList>
+            {!newActivity&&
+            <IonFooter>
+                <IonToolbar>
+                        <IonItem slot="start">
+                          <IonToggle enableOnOffLabels={true} checked={activityActive} onIonChange={updateActivityActive}>Active</IonToggle>;
+                        </IonItem>
+                        <IonButton slot="end" strong={true} color="danger" onClick={e=>DeleteActivity()}>
+                            Delete
+                        </IonButton>
+                </IonToolbar>
+            </IonFooter>
+            }
             
         </>
   )}
