@@ -15,6 +15,8 @@ type Activity struct {
 	WDone      int64     `json:"w_done"`
 	LastUpdate time.Time `json:"last_update"`
 	Focus      bool      `json:"focus"`
+	FocusTime  int64     `gorm:"type:int64;default:0" json:"focus_time"`
+
 }
 
 

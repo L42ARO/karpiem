@@ -1,15 +1,16 @@
 /*Golang activity:
 type Activity struct {
-	ID          string	`gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	Active		bool  	`gorm:"type:boolean;default:true"`
-	Name        string
-	Days        string
-	DPoms       int64
-	WPoms       int64
-	DDone       int64
-	WDone       int64
-	LastUpdate  time.Time
-	Focus       bool
+	ID         string    `gorm:"type:uuid;default:gen_random_uuid();primaryKey" json:"id"`
+	Active     bool      `gorm:"type:boolean;default:true" json:"active"`
+	Name       string    `json:"name"`
+	Days       string    `json:"days"`
+	DPoms      int64     `json:"d_poms"`
+	WPoms      int64     `json:"w_poms"`
+	DDone      int64     `json:"d_done"`
+	WDone      int64     `json:"w_done"`
+	LastUpdate time.Time `json:"last_update"`
+	Focus      bool      `json:"focus"`
+	Focus_time int64 	`json:"focus_time"`
 }
 */
 export interface Activity{
@@ -23,6 +24,7 @@ export interface Activity{
     w_done: number;
     last_update: string;
     focus: boolean;
+    focus_time: number;
 }
 export interface Setting{
     id: string;
