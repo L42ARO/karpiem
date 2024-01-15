@@ -310,12 +310,28 @@ async function getDayActivities() {
       },
     });
   }
+  const testNotification = async () => {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      // Permission granted, trigger the timer in the service worker
+      navigator.serviceWorker.controller?.postMessage({ action: 'startTimer' });
+    } else {
+      console.warn('Permission for notifications denied');
+    }
+  } catch (error) {
+    console.error('Error requesting notification permission:', error);
+  }
+  }
 
   return (
     <>
     <IonPage>
       <IonHeader id="header">
         <IonToolbar>
+          <IonButton slot="start" onClick={()=>testNotification()}>
+            <IonIcon icon={reload} />
+          </IonButton>
           <IonTitle>Day</IonTitle>
           <IonButton slot="end" color="primary" shape="round" onClick={e=>OpenActivityEditorModal()}>
             <IonIcon icon={add} />

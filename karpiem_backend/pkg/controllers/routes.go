@@ -25,4 +25,7 @@ func SetupHandlers() {
 	http.HandleFunc("/login_user", LoginHandler)
 
 	http.HandleFunc("/ws", websocketHandler)
+
+	http.HandleFunc("/save-subscription", SaveSubscriptionHandler)
+	http.HandleFunc("/send-notification", SendNotificationHandler)
 }

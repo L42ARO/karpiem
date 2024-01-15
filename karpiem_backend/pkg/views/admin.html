@@ -121,6 +121,10 @@
         <input type="password" id="loginPassword" name="loginPassword" placeholder="password">
         <button type="button" onclick="loginUserTest()">Login</button>
     </div>
+    <div>
+        <h2>Test Push Notification</h2>
+        <button type="button" onclick="testPushNotification()">Test Push Notification</button>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.js"></script>
     <script type="text/javascript">
         //Get server url from document
@@ -429,6 +433,21 @@
                 .catch((error) => {
                     console.error('Error:', error);
                 });
+            });
+        }
+        function testPushNotification(){
+            fetch(url + '/send-notification')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return "Success";
+            })
+            .then(data=>{
+                console.log('Send Notification:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
             });
         }
     </script>

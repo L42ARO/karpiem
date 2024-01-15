@@ -10,7 +10,7 @@ import {
   setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { ellipse, square, triangle } from 'ionicons/icons';
+import { ellipse, square, timer, triangle } from 'ionicons/icons';
 import { sunny, calendar, cog } from 'ionicons/icons';
 import Tab1 from './pages/Tab1';
 import Tab2 from './pages/Tab2';
@@ -35,6 +35,7 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 import { ServerProvider } from './context/serverContext';
+import { Timer } from './pages/Timer';
 
 setupIonicReact();
 
@@ -49,6 +50,9 @@ const App: React.FC = () => (
           </Route>
           <Route exact path="/tab2">
             <Tab2 />
+          </Route>
+          <Route path="/timer">
+            <Timer />
           </Route>
           <Route path="/tab3">
             <Tab3 />
@@ -65,6 +69,10 @@ const App: React.FC = () => (
           <IonTabButton tab="tab2" href="/tab2">
             <IonIcon aria-hidden="true" icon={calendar} />
             <IonLabel>Week</IonLabel>
+          </IonTabButton>
+          <IonTabButton tab="timer" href="/timer">
+            <IonIcon aria-hidden="true" icon={timer} />
+            <IonLabel>Timer</IonLabel>
           </IonTabButton>
           <IonTabButton tab="tab3" href="/tab3">
             <IonIcon aria-hidden="true" icon={cog} />
