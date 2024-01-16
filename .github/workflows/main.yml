@@ -2,7 +2,7 @@ name: Check Issue Milestone Due Date
 
 on:
   issues:
-    types: [milestoned]
+    types: [opened]
 
 jobs:
   check-milestone-due-date:
@@ -14,10 +14,10 @@ jobs:
       run: echo "::set-output name=milestone::${{ toJson(github.event.issue.milestone) }}"
       
     - name: Check milestone due date
-      if: steps.check-milestone.outputs.milestone
+      if: steps.check-milestone.outputs.milestone != 'null'
       run: |
         milestone_due_date=$(echo ${{ steps.check-milestone.outputs.milestone }} | jq -r '.due_on')
-        if [ "$milestone_due_date" != "null" ]; then
+        if [ -n "$milestone_due_date" ] && [ "$milestone_due_date" != "null" ]; then
           echo "Issue milestone due date: $milestone_due_date"
         else
           echo "Issue milestone does not have a due date."
