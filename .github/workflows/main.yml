@@ -11,7 +11,7 @@ jobs:
       - name: Check milestone due date and update name
         uses: actions/github-script@v5
         with:
-          github-token: ${{ secrets.YOUR_GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
           script: |
             const milestone = context.payload.milestone;
             if (milestone.due_on) {
