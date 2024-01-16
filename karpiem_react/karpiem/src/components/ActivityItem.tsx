@@ -42,7 +42,7 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
             setPomsDone(poms_done + n);
         }
     }
-    if((!check1 || !check2) && n > 0){
+    if(n > 0 && (activityData.full || blocked)){
         showToast("You need to provide permission", "warning");
         override_func?.(poms_done+n, ChangeDone);
     }

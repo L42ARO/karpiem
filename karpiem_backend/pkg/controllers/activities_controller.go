@@ -260,7 +260,7 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	check1 := newWDone > activity.WPoms
-	check2 := newDDone > activity.DPoms
+	check2 := newDDone > activity.DPoms && request.DOrW
 	check3 := request.DayBlocked
 	//Finally we should only be asking for override key if the user is trying to increase the value
 	check4 := (request.DOrW && newDDone > activity.DDone) || (!request.DOrW && newWDone > activity.WDone)

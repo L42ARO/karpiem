@@ -213,9 +213,9 @@ async function getDayActivities() {
       });
       //Separate the habits and weeklies
       //If d_poms * 7 == len(days) then it is a daily
-      var habits = data.activities.filter(activity => activity.days.length == activity.d_poms*7);
+      var habits = data.activities.filter(activity => activity.days.length == activity.w_poms);
       //Otherwise it is a weekly a.k.a optional for the day
-      var options = data.activities.filter(activity => activity.days.length != activity.d_poms*7);
+      var options = data.activities.filter(activity => activity.days.length != activity.w_poms);
       //Convert the activities to a simplified version
       var habits_simplified = habits.map(activity => {
         var full = activity.d_done >= activity.d_poms || activity.w_done >= activity.w_poms;
@@ -329,9 +329,6 @@ async function getDayActivities() {
     <IonPage>
       <IonHeader id="header">
         <IonToolbar>
-          <IonButton slot="start" onClick={()=>testNotification()}>
-            <IonIcon icon={reload} />
-          </IonButton>
           <IonTitle>Day</IonTitle>
           <IonButton slot="end" color="primary" shape="round" onClick={e=>OpenActivityEditorModal()}>
             <IonIcon icon={add} />

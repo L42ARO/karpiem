@@ -149,7 +149,7 @@ export const ActivityEditorModal = ({
   }
   useEffect(() => {
     if(activityType === 'daily'){
-      setPoms(maxDaily*7);
+      setPoms(maxDaily*days.length);
     }
   }, [maxDaily]);
   async function DeleteActivity(){

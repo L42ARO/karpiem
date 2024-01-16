@@ -77,23 +77,38 @@ const Tab2: React.FC = () => {
       //Filter the activities to only include the ones that are active and have the day in their days
       data.activities = data.activities.filter(activity => activity.active);
       data.activities.sort((a, b) => {
-        if (a.focus === b.focus) {
-          const a_full = a.w_done >= a.w_poms;
-          const b_full = b.w_done >= b.w_poms;
-          if (a_full === b_full) {
-            return 0; 
-          } else {
-            return a_full ? 1 : -1;
+          const aFocus = a.focus;
+          const bFocus = b.focus;
+            
+          // Tasks with focus=true come first
+          if (aFocus !== bFocus) {
+              return aFocus ? -1 : 1;
           }
-        } else {
-          return a.focus ? -1 : 1;
-        }
+        
+          // Tasks that are full come last
+          // const aFull = a.w_done >= a.w_poms;
+          // const bFull = b.w_done >= b.w_poms;
+          // if (aFull !== bFull) {
+          //     return aFull ? 1 : -1;
+          // }
+        
+          // Sort based on completion percentage (w_done/w_poms)
+          const aCompletionPercentage = a.w_poms !== 0 ? a.w_done / a.w_poms : 0;
+          const bCompletionPercentage = b.w_poms !== 0 ? b.w_done / b.w_poms : 0;
+        
+          if (aCompletionPercentage !== bCompletionPercentage) {
+            return aCompletionPercentage - bCompletionPercentage;
+          }
+
+          // Sort by w_poms in descending order
+          return b.w_poms - a.w_poms;
       });
+
       //Separate the activities into dailies and weeklies
       //If d_poms * 7 == len(days) then it is a daily
-      var dailies = data.activities.filter(activity => activity.days.length == activity.d_poms*7);
+      var dailies = data.activities.filter(activity => activity.days.length == activity.w_poms);
       //Otherwise it is a weekly a.k.a optional for the day
-      var options = data.activities.filter(activity => activity.days.length != activity.d_poms*7);
+      var options = data.activities.filter(activity => activity.days.length != activity.w_poms);
       //Convert the activities to a simplified version
       var dailies_simplified = dailies.map(activity => {
         var full = activity.w_done >= activity.w_poms;
