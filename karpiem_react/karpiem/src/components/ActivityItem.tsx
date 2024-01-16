@@ -4,7 +4,7 @@ import '../theme/custom_global.css';
 import { add, create, play, reload, remove, stop, timeOutline } from 'ionicons/icons';
 import { useServer } from '../context/serverContext';
 import { FormEventHandler, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { Activity, GetAllActivitiesResponse, UpdateActivityResponse } from '../context/dataContext';
+import { Activity, GetAllActivitiesResponse, UpdateActivityResponse, UpdateFocusRequest } from '../context/dataContext';
 
 export interface SimplifiedActivity{
   id: string;
@@ -50,17 +50,19 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
   }
   async function FocusActivity(){
     var focus = !activityData.focus;
+    var request:UpdateFocusRequest = {
+        id: activityData.id,
+        focus: focus,
+        focus_time: 0,
+        room_id:"123456789"
+    };
     try{
       var res = await fetch(serverURL + '/focus_activity', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          id: activityData.id,
-          focus: focus,
-          room_id:"123456789"
-        })
+        body: JSON.stringify(request)
       })
       if (res.ok){
         const data: Activity = await res.json();

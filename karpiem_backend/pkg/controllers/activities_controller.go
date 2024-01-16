@@ -510,6 +510,9 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Activity not found", http.StatusNotFound)
 		return
 	}
+	trigger_start_check := false
+	trigger_stop_check := false
+
 	if request.Focus{
 		var other_focus data.Activity
 		result := db.Where("focus = ?", true).First(&other_focus)
@@ -524,6 +527,20 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 			return
 		}
 
+		//We will start the focus timer go-routine
+		curr_focus_time := activity.FocusTime
+		//Calculate the go-routine time from 20 minutes assuming curr_focus_time is in milliseconds
+		go_routine_time := 20 * 60 * 1000 - curr_focus_time
+		//If the go_routine_time is negative, set it to 0
+		if go_routine_time < 0 {
+			go_routine_time = 0
+		}
+		trigger_start_check = true
+
+	}else{
+		//Use the focus time from the request as the new focus time
+		activity.FocusTime = request.FocusTime
+		trigger_stop_check = true
 	}
 
 	activity.Focus = request.Focus
@@ -538,8 +555,8 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 		//Send the message to all the clients in the room
 		var response models.UpdateActivityResponse
 		response.Updated_Activity = activity
-		response.TriggerStart = request.Focus
-		response.TriggerStop = !request.Focus
+		response.TriggerStart = trigger_start_check
+		response.TriggerStop = trigger_stop_check
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil{

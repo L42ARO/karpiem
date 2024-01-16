@@ -49,6 +49,20 @@ export interface UpdateActivityResponse{
     trigger_start: boolean;
     trigger_stop: boolean;
 }
+/*Golang UpdateFocusRequest:
+type FocusRequest struct {
+	ID          string `json:"id"`
+	Focus       bool   `json:"focus"`
+	FocusTime  	int64  `json:"focus_time"`
+	RoomID		string `json:"room_id"`
+}*/
+export interface UpdateFocusRequest{
+    id: string;
+    focus: boolean;
+    focus_time: number;
+    room_id: string;
+}
+
 export interface GetAllActivitiesResponse{
     activities: Activity[];
 }
