@@ -1,0 +1,15 @@
+.clock_circle{
+    display: flex;
+    justify-content: center;
+    background-color: var(--ion-color-light);
+    border-radius: 50%;
+    align-items: center;
+    margin: 0 0.2rem 0.5rem;
+    aspect-ratio: 1/1;
+    /* No decorations if it's a <a> tag */
+    text-decoration: none !important;
+    color: white !important;
+}
+.clock_circle:active{
+    background-color: var(--ion-color-primary) !important;
+}

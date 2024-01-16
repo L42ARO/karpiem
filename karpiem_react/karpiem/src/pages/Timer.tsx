@@ -1,7 +1,8 @@
-import { IonButton, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonPage, IonTitle, IonToolbar } from "@ionic/react"
+import { IonButton, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonPage, IonRow, IonTitle, IonToolbar } from "@ionic/react"
 import { add, play, reload } from "ionicons/icons";
 import { useState } from "react";
 import { useServer } from "../context/serverContext";
+import './Timer.css';
 
 export const Timer:React.FC = () => {
     const [time, setTime] = useState<number>(0);
@@ -29,7 +30,7 @@ export const Timer:React.FC = () => {
         <IonHeader id="header">
           <IonToolbar>
             
-            <IonTitle>Day</IonTitle>
+            <IonTitle>Timer</IonTitle>
           </IonToolbar>
         </IonHeader>
 
@@ -40,6 +41,15 @@ export const Timer:React.FC = () => {
                   <IonIcon icon={play} />
                 </IonButton>
             </IonItem>
+            <IonGrid fixed>
+                <IonRow className='ion-justify-content-center ion-padding-horizontal'>
+                    <IonCol>
+                        <a className='clock_circle'>
+                            <h2>10:00</h2>
+                        </a>
+                    </IonCol>
+                </IonRow>
+            </IonGrid>
       </IonContent>
     </IonPage>
 }
