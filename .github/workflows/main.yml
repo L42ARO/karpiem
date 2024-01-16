@@ -2,7 +2,7 @@ name: Check Issue Milestone Due Date
 
 on:
   issues:
-    types: [opened]
+    types: [milestoned]
 
 jobs:
   check-milestone-due-date:
