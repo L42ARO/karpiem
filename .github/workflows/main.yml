@@ -2,7 +2,7 @@ name: Update Milestone Name
 on:
   milestone:
     types:
-      - edited
+      - created
 
 jobs:
   update-milestone-name:
