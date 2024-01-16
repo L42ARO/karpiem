@@ -538,6 +538,8 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 		//Send the message to all the clients in the room
 		var response models.UpdateActivityResponse
 		response.Updated_Activity = activity
+		response.TriggerStart = request.Focus
+		response.TriggerStop = !request.Focus
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil{

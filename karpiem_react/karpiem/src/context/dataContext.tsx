@@ -38,8 +38,16 @@ interface User{
     username: string;
     email: string;
 }
+/*Golang UpdateActivityResponse:
+type UpdateActivityResponse struct {
+	Updated_Activity data.Activity	`json:"updated_activity"`
+	TriggerStart bool `json:"trigger_start"`
+	TriggerStop bool `json:"trigger_stop"`
+}*/
 export interface UpdateActivityResponse{
     updated_activity: Activity;
+    trigger_start: boolean;
+    trigger_stop: boolean;
 }
 export interface GetAllActivitiesResponse{
     activities: Activity[];
