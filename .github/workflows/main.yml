@@ -2,7 +2,7 @@ name: Update Milestone Name
 on:
   milestone:
     types:
-      - created
+      - edited
 
 jobs:
   update-milestone-name:
@@ -11,17 +11,20 @@ jobs:
       - name: Check milestone due date and update name
         uses: actions/github-script@v5
         with:
-          github-token: ${{ secrets.GH_TOKEN }}
+          github-token: ${{ secrets.YOUR_GITHUB_TOKEN }}
           script: |
             const milestone = context.payload.milestone;
             if (milestone.due_on) {
               const dueDate = new Date(milestone.due_on);
               const formattedDate = `${dueDate.getFullYear()}-${dueDate.getMonth()+1}-${dueDate.getDate()}`;
               const newMilestoneName = `${formattedDate} ${milestone.title}`;
-              await github.rest.issues.updateMilestone({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                milestone_number: milestone.number,
-                title: newMilestoneName
-              });
+              // Check if the milestone name already has the desired format
+              if (!milestone.title.startsWith(formattedDate)) {
+                await github.rest.issues.updateMilestone({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  milestone_number: milestone.number,
+                  title: newMilestoneName
+                });
+              }
             }
