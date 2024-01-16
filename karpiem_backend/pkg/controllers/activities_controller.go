@@ -9,6 +9,7 @@ import (
 
 	"karpiem/pkg/data"
 	"karpiem/pkg/models"
+	"karpiem/pkg/services"
 )
 
 func CreateActivityHandler(w http.ResponseWriter, r *http.Request) {
@@ -529,18 +530,14 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 
 		//We will start the focus timer go-routine
 		curr_focus_time := activity.FocusTime
-		//Calculate the go-routine time from 20 minutes assuming curr_focus_time is in milliseconds
-		go_routine_time := 20 * 60 * 1000 - curr_focus_time
-		//If the go_routine_time is negative, set it to 0
-		if go_routine_time < 0 {
-			go_routine_time = 0
-		}
 		trigger_start_check = true
+		services.TriggerTimer("123456789", curr_focus_time)
 
 	}else{
 		//Use the focus time from the request as the new focus time
 		activity.FocusTime = request.FocusTime
 		trigger_stop_check = true
+		services.StopTimer("123456789")
 	}
 
 	activity.Focus = request.Focus
