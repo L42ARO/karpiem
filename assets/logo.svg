@@ -26,9 +26,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.3833113"
-     inkscape:cx="832.22175"
-     inkscape:cy="1201.3734"
+     inkscape:zoom="0.19165565"
+     inkscape:cx="1038.3205"
+     inkscape:cy="4067.1903"
      inkscape:window-width="2560"
      inkscape:window-height="1494"
      inkscape:window-x="-11"
@@ -36,7 +36,14 @@
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
   <defs
-     id="defs1" />
+     id="defs1">
+    <rect
+       x="-1946.1988"
+       y="3344.5401"
+       width="3167.1386"
+       height="813.95983"
+       id="rect3" />
+  </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
@@ -98,5 +105,78 @@
        x="-178.01073"
        y="-498.19949"
        transform="matrix(-0.53942699,0.84203238,-0.83957389,-0.5432455,0,0)" />
+    <rect
+       style="fill:#5b11c3;fill-opacity:1;stroke:none;stroke-width:0.51489"
+       id="rect1-6"
+       width="1645.8516"
+       height="289.90793"
+       x="-649.07935"
+       y="854.46619"
+       inkscape:export-filename=".\banner.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+    <g
+       id="g3"
+       transform="translate(-222.26278,0.05276109)">
+      <path
+         id="path1-6"
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.213702"
+         d="m 618.4861,910.9362 a 68.295621,61.047928 0 0 0 -68.35727,60.93759 l 136.5912,0.11021 A 68.295621,61.047928 0 0 0 618.4861,910.9362 Z m 16.60864,22.85337 c 8.9136,0.26916 9.56003,22.51987 9.56003,22.51987 l -20.54898,-0.29549 c 0,0 2.07536,-22.49355 10.98895,-22.22438 z m -35.85747,0.15047 c 8.9136,-0.26916 10.98896,22.22418 10.98896,22.22418 l -20.54899,0.29569 c 0,0 0.64644,-22.25071 9.56003,-22.51987 z" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:11.5482;stroke-dasharray:none;stroke-opacity:1"
+         d="m 552.40897,989.62432 c 0,0 129.62382,-20.40085 131.75781,15.52488 2.13399,35.9258 -121.04219,37.8288 -119.77098,18.0914 1.27121,-19.7375 105.59541,-22.6531 105.97117,15.6284 0.37576,38.2815 -92.28197,41.9097 -93.08124,23.1763 -0.79928,-18.7334 83.31122,-15.9232 82.8353,11.2963 -0.47593,27.2196 -44.94629,6.5437 -44.60639,37.58"
+         id="path2-4"
+         sodipodi:nodetypes="czzzzzc" />
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:8.07692;stroke-dasharray:none;stroke-opacity:1"
+         id="rect2-4"
+         width="28.778267"
+         height="15.17758"
+         x="816.89349"
+         y="686.25018"
+         transform="rotate(20.46894)" />
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:8.07692;stroke-dasharray:none;stroke-opacity:1"
+         id="rect2-8-1"
+         width="28.778267"
+         height="15.17758"
+         x="-340.90652"
+         y="1120.3796"
+         transform="matrix(-0.9368619,0.34969956,0.34969956,0.9368619,0,0)" />
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:8.07692;stroke-dasharray:none;stroke-opacity:1"
+         id="rect2-8-4-0"
+         width="28.778267"
+         height="15.17758"
+         x="872.26776"
+         y="617.54242"
+         transform="matrix(-0.00722352,0.99997391,0.99997391,0.00722352,0,0)" />
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:6.9193;stroke-dasharray:none;stroke-opacity:1"
+         id="rect2-8-4-2-0"
+         width="21.120369"
+         height="15.177396"
+         x="1058.1354"
+         y="-17.034122"
+         transform="matrix(0.53942699,0.84203238,0.83957389,-0.5432455,0,0)" />
+      <rect
+         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:6.9193;stroke-dasharray:none;stroke-opacity:1"
+         id="rect2-8-4-2-5-1"
+         width="21.120369"
+         height="15.177396"
+         x="387.39081"
+         y="-1061.1759"
+         transform="matrix(-0.53942699,0.84203238,-0.83957389,-0.5432455,0,0)" />
+    </g>
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,292.669,1.5782647)"
+       id="text1"
+       style="font-size:666.667px;font-family:sans-serif;-inkscape-font-specification:sans-serif;white-space:pre;shape-inside:url(#rect3);fill:#ffffff;stroke-width:113.386"><tspan
+         x="-1946.1992"
+         y="3951.1228"
+         id="tspan2"><tspan
+           style="font-family:Mistral;-inkscape-font-specification:Mistral"
+           id="tspan1">Karpiem</tspan></tspan></text>
   </g>
 </svg>
