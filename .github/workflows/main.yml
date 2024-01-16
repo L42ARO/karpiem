@@ -1,24 +1,30 @@
-name: Check Issue Milestone Due Date
+name: Milestone Due Date
 
 on:
   issues:
     types: [milestoned]
 
 jobs:
-  check-milestone-due-date:
+  print_due_date:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Check if issue has milestone
-      id: check-milestone
-      run: echo "::set-output name=milestone::${{ toJson(github.event.issue.milestone) }}"
-      
-    - name: Check milestone due date
-      if: steps.check-milestone.outputs.milestone != 'null'
-      run: |
-        milestone_due_date=$(echo ${{ steps.check-milestone.outputs.milestone }} | jq -r '.due_on')
-        if [ -n "$milestone_due_date" ] && [ "$milestone_due_date" != "null" ]; then
-          echo "Issue milestone due date: $milestone_due_date"
-        else
-          echo "Issue milestone does not have a due date."
-        fi
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get milestone due date
+        run: |
+          ISSUE_NUMBER=${{ github.event.issue.number }}
+          REPO=${{ github.repository }}
+          MILESTONE_NUMBER=${{ github.event.issue.milestone.number }}
+
+          MILESTONE_DATA=$(gh api repos/$REPO/milestones/$MILESTONE_NUMBER)
+
+          DUE_DATE=$(echo $MILESTONE_DATA | jq -r '.due_on')
+
+          if [ "$DUE_DATE" != "null" ]; then
+            echo "Milestone due date for issue $ISSUE_NUMBER is $DUE_DATE"
+          else
+            echo "No due date set for milestone of issue $ISSUE_NUMBER"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
