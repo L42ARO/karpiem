@@ -139,7 +139,7 @@ const Tab3: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen={true} className='ion-padding-top'>
-        <IonGrid>
+        <IonGrid className='ion-no-padding'>
           <IonRow className='ion-justify-content-center'>
             <IonCol size="12" sizeLg="8">
               <IonList>

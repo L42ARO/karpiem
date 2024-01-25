@@ -351,7 +351,7 @@ const Tab1: React.FC = () => {
           <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
             <IonRefresherContent></IonRefresherContent>
           </IonRefresher>
-          <IonGrid>
+          <IonGrid className='ion-no-padding'>
             <IonRow className='ion-justify-content-center'>
               <IonCol size="12" sizeLg="8">
                 <IonGrid fixed={true}>

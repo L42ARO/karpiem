@@ -35,6 +35,9 @@ export const Timer:React.FC = () => {
         </IonHeader>
 
       <IonContent fullscreen={true} className='ion-padding-top'>
+<IonGrid className='ion-no-padding'>
+          <IonRow className='ion-justify-content-center'>
+            <IonCol size="12" sizeLg="8">
             <IonItem>
                 <IonInput type="number" placeholder="Enter time in seconds" onIonInput={UpdateTime}/>
                 <IonButton color="primary" slot="end" onClick={()=>testNotification()}>
@@ -50,6 +53,9 @@ export const Timer:React.FC = () => {
                     </IonCol>
                 </IonRow>
             </IonGrid>
+            </IonCol>
+          </IonRow>
+        </IonGrid>
       </IonContent>
     </IonPage>
 }
