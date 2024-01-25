@@ -27,7 +27,7 @@ interface WeekActivitiesResponse{
   total_done: number;
 }
 const Tab2: React.FC = () => {
-  const [today, setToday] = useState<'M' | 'T' | 'W' | 'R' | 'F' | 'S' | 'U'>('M');
+  const [today, setToday] = useState<string>('M');
   const {serverURL, showToast} = useServer();
   // const [weekActivitiesResponse, setWeekActivitiesResponse] = useState<WeekActivitiesResponse>();
   const [dailies, setDailies] = useState<SimplifiedActivity[]>([]);
@@ -54,9 +54,14 @@ const Tab2: React.FC = () => {
   
   useEffect(() => {
     //Figure out what day it is
-    const present = new Date();
-    const day = present.getDay();
-    setToday(day == 0 ? 'U' : day == 1 ? 'M' : day == 2 ? 'T' : day == 3 ? 'W' : day == 4 ? 'R' : day == 5 ? 'F' : 'S');
+    var now = new Date();
+  var today = now.getDay()-1;
+  var currentHour = now.getHours();
+  if (currentHour < 4) today = (today - 1) % 7;
+  if(today < 0) today = today + 7;
+  //Get the day as M, T, W, R, F, S, U
+  var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
+  setToday(day);
     getWeekActivities();
   }, []);
   async function handleRefresh(event: CustomEvent<RefresherEventDetail>) {

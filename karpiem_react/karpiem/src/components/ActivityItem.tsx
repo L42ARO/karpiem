@@ -38,14 +38,14 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
     const check1 = (n<0 && poms_done> 0) || (n>0 && !activityData.full);
     const check2 = (n<0 || !blocked);
     if (check1){
-        if (check2){
+        //if (check2){
             setPomsDone(poms_done + n);
-        }
+        //}
     }
-    if(n > 0 && (activityData.full || blocked)){
-        showToast("You need to provide permission", "warning");
-        override_func?.(poms_done+n, ChangeDone);
-    }
+    //if(n > 0 && (activityData.full || blocked)){
+    //    showToast("You need to provide permission", "warning");
+    //    override_func?.(poms_done+n, ChangeDone);
+    //}
     slider.current?.close();
   }
   async function FocusActivity(){

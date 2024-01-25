@@ -174,9 +174,13 @@ const Tab1: React.FC = () => {
         days_max_array.push(parseInt(days_max.substring(i, i+2), 16));
       }
       //Depending on the day of the week, set the day_max (Monday is 0, Sunday is 6)
-      var day = new Date().getDay()-1;
-      if(day < 0) day = 6;
-      setDayMax(days_max_array[day]);
+      var now = new Date();
+  var today = now.getDay()-1;
+  var currentHour = now.getHours();
+  if (currentHour < 4) today = (today - 1) % 7;
+  if(today < 0) today = today + 7;
+  //Get the day as M, T, W, R, F, S, U
+      setDayMax(days_max_array[today]);
     }
     catch(err){
       console.log(err);
@@ -184,8 +188,11 @@ const Tab1: React.FC = () => {
     }
   }
 async function getDayActivities() {
-  var today = new Date().getDay()-1;
-  if(today < 0) today = 6;
+  var now = new Date();
+  var today = now.getDay()-1;
+  var currentHour = now.getHours();
+  if (currentHour < 4) today = (today - 1) % 7;
+  if(today < 0) today = today + 7;
   //Get the day as M, T, W, R, F, S, U
   var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
 
