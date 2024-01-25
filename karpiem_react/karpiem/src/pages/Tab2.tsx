@@ -12,7 +12,7 @@ import { OverrideModal } from '../components/OverrideModal';
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
 import { ActivityEditorModal, ActivityEditorModalProps } from '../components/ActivityEditorModal';
 
-interface WeekActivityResponse{
+interface WeekActivityResponse {
   id: string;
   name: string;
   w_poms: number;
@@ -20,7 +20,7 @@ interface WeekActivityResponse{
   full: boolean;
   focus: boolean;
 }
-interface WeekActivitiesResponse{
+interface WeekActivitiesResponse {
   dailies: WeekActivityResponse[];
   weeklies: WeekActivityResponse[];
   total_poms: number;
@@ -28,7 +28,7 @@ interface WeekActivitiesResponse{
 }
 const Tab2: React.FC = () => {
   const [today, setToday] = useState<string>('M');
-  const {serverURL, showToast} = useServer();
+  const { serverURL, showToast } = useServer();
   // const [weekActivitiesResponse, setWeekActivitiesResponse] = useState<WeekActivitiesResponse>();
   const [dailies, setDailies] = useState<SimplifiedActivity[]>([]);
   const [weeklies, setWeeklies] = useState<SimplifiedActivity[]>([]);
@@ -36,10 +36,10 @@ const Tab2: React.FC = () => {
   const [total_done, setTotalDone] = useState<number>(0);
   const location = useLocation();
   const [overrideModalPresent, overrideModalDismiss] = useIonModal(OverrideModal, {
-    onDismiss: (data:string, role:string)=>overrideModalDismiss(data, role)
+    onDismiss: (data: string, role: string) => overrideModalDismiss(data, role)
   });
   const [currentEditorSettings, setCurrentEditorSettings] = useState<ActivityEditorModalProps>({
-    onDismiss:()=>{},
+    onDismiss: () => { },
     newActivity: true,
     daily: false
   });
@@ -47,21 +47,21 @@ const Tab2: React.FC = () => {
 
   useEffect(() => {
     //Check if it's current location programmatically
-    if(location.pathname === '/tab2'){
+    if (location.pathname === '/tab2') {
       getWeekActivities();
     }
   }, [location]);
-  
+
   useEffect(() => {
     //Figure out what day it is
     var now = new Date();
-  var today = now.getDay()-1;
-  var currentHour = now.getHours();
-  if (currentHour < 4) today = (today - 1) % 7;
-  if(today < 0) today = today + 7;
-  //Get the day as M, T, W, R, F, S, U
-  var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
-  setToday(day);
+    var today = now.getDay() - 1;
+    var currentHour = now.getHours();
+    if (currentHour < 4) today = (today - 1) % 7;
+    if (today < 0) today = today + 7;
+    //Get the day as M, T, W, R, F, S, U
+    var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
+    setToday(day);
     getWeekActivities();
   }, []);
   async function handleRefresh(event: CustomEvent<RefresherEventDetail>) {
@@ -72,41 +72,41 @@ const Tab2: React.FC = () => {
   //Make async function to get week activities
   async function getWeekActivities() {
 
-  try {
-    const response = await fetch(serverURL + '/get_all_activities');
-    if (!response.ok){
-      var resTxt = await response.text();
-      throw new Error(resTxt);
-    }
-    const data = await response.json() as GetAllActivitiesResponse;
+    try {
+      const response = await fetch(serverURL + '/get_all_activities');
+      if (!response.ok) {
+        var resTxt = await response.text();
+        throw new Error(resTxt);
+      }
+      const data = await response.json() as GetAllActivitiesResponse;
       //Filter the activities to only include the ones that are active and have the day in their days
       data.activities = data.activities.filter(activity => activity.active);
       data.activities.sort((a, b) => {
-          const aFocus = a.focus;
-          const bFocus = b.focus;
-            
-          // Tasks with focus=true come first
-          if (aFocus !== bFocus) {
-              return aFocus ? -1 : 1;
-          }
-        
-          // Tasks that are full come last
-          // const aFull = a.w_done >= a.w_poms;
-          // const bFull = b.w_done >= b.w_poms;
-          // if (aFull !== bFull) {
-          //     return aFull ? 1 : -1;
-          // }
-        
-          // Sort based on completion percentage (w_done/w_poms)
-          const aCompletionPercentage = a.w_poms !== 0 ? a.w_done / a.w_poms : 0;
-          const bCompletionPercentage = b.w_poms !== 0 ? b.w_done / b.w_poms : 0;
-        
-          if (aCompletionPercentage !== bCompletionPercentage) {
-            return aCompletionPercentage - bCompletionPercentage;
-          }
+        const aFocus = a.focus;
+        const bFocus = b.focus;
 
-          // Sort by w_poms in descending order
-          return b.w_poms - a.w_poms;
+        // Tasks with focus=true come first
+        if (aFocus !== bFocus) {
+          return aFocus ? -1 : 1;
+        }
+
+        // Tasks that are full come last
+        // const aFull = a.w_done >= a.w_poms;
+        // const bFull = b.w_done >= b.w_poms;
+        // if (aFull !== bFull) {
+        //     return aFull ? 1 : -1;
+        // }
+
+        // Sort based on completion percentage (w_done/w_poms)
+        const aCompletionPercentage = a.w_poms !== 0 ? a.w_done / a.w_poms : 0;
+        const bCompletionPercentage = b.w_poms !== 0 ? b.w_done / b.w_poms : 0;
+
+        if (aCompletionPercentage !== bCompletionPercentage) {
+          return aCompletionPercentage - bCompletionPercentage;
+        }
+
+        // Sort by w_poms in descending order
+        return b.w_poms - a.w_poms;
       });
 
       //Separate the activities into dailies and weeklies
@@ -147,7 +147,7 @@ const Tab2: React.FC = () => {
       });
       setDailies(dailies_simplified);
       setWeeklies(options_simplified);
-      
+
     } catch (error) {
       console.log(error);
       // presentToastInfo((error as Error).message);
@@ -182,7 +182,7 @@ const Tab2: React.FC = () => {
       },
     });
   }
-  const OpenActivityEditorModal = (activityData?: SimplifiedActivity, newActivity?:boolean, daily?:boolean) => {
+  const OpenActivityEditorModal = (activityData?: SimplifiedActivity, newActivity?: boolean, daily?: boolean) => {
     setCurrentEditorSettings({
 
       onDismiss: (data?: string | null | undefined | number, role?: string) => activityEditorModalDismiss(data, role),
@@ -204,7 +204,7 @@ const Tab2: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Week</IonTitle>
-          <IonButton color="primary" slot='end' shape="round" onClick={e=>OpenActivityEditorModal()}>
+          <IonButton color="primary" slot='end' shape="round" onClick={e => OpenActivityEditorModal()}>
             <IonIcon icon={add} />
           </IonButton>
         </IonToolbar>
@@ -213,50 +213,56 @@ const Tab2: React.FC = () => {
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent></IonRefresherContent>
         </IonRefresher>
-        <IonGrid fixed={true}>
-          <IonRow className='ion-justify-content-center ion-padding-horizontal'>
-            {['M', 'T', 'W', 'R', 'F', 'S', 'U'].map((day, i) => {
-              return <IonCol key={i} size="1.5" size-md="1" className='ion-no-padding'>
-                <div className={`day_circle ${day===today?"today":''}`}>
-                  {day}
-                </div>
-              </IonCol>
-            })}
-          </IonRow>
-          <IonRow className='ion-justify-content-center ion-padding-horizontal'>
-            <IonCol size='auto'>
-              <IonTitle size='large'> <b>{total_done} / {total_poms}</b> </IonTitle>
+        <IonGrid>
+          <IonRow className='ion-justify-content-center'>
+            <IonCol size="12" sizeLg="8">
+              <IonGrid fixed={true}>
+                <IonRow className='ion-justify-content-center ion-padding-horizontal'>
+                  {['M', 'T', 'W', 'R', 'F', 'S', 'U'].map((day, i) => {
+                    return <IonCol key={i} size="1.5" size-md="1" className='ion-no-padding'>
+                      <div className={`day_circle ${day === today ? "today" : ''}`}>
+                        {day}
+                      </div>
+                    </IonCol>
+                  })}
+                </IonRow>
+                <IonRow className='ion-justify-content-center ion-padding-horizontal'>
+                  <IonCol size='auto'>
+                    <IonTitle size='large'> <b>{total_done} / {total_poms}</b> </IonTitle>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
+              <IonCard >
+                <IonHeader>
+                  <IonToolbar className='gradient-header'>
+                    <IonTitle>Dailies</IonTitle>
+                  </IonToolbar>
+                </IonHeader>
+                <IonCardContent className='ion-no-padding'>
+                  <IonList>
+                    {dailies.map((activity, i) => (
+                      <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal} edit_func={OpenActivityEditorModal} />
+                    ))}
+                  </IonList>
+                </IonCardContent>
+              </IonCard>
+              <IonCard>
+                <IonHeader>
+                  <IonToolbar className='gradient-header'>
+                    <IonTitle>Weeklies</IonTitle>
+                  </IonToolbar>
+                </IonHeader>
+                <IonCardContent className='ion-no-padding'>
+                  <IonList>
+                    {weeklies.map((activity, i) => (
+                      <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal} edit_func={OpenActivityEditorModal} />
+                    ))}
+                  </IonList>
+                </IonCardContent>
+              </IonCard>
             </IonCol>
           </IonRow>
         </IonGrid>
-        <IonCard >
-        <IonHeader>
-          <IonToolbar className='gradient-header'>
-            <IonTitle>Dailies</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-          <IonCardContent className='ion-no-padding'>
-            <IonList>
-              {dailies.map((activity, i) => (
-                <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal} edit_func={OpenActivityEditorModal}/>
-              ))}
-            </IonList>
-          </IonCardContent>
-        </IonCard>
-        <IonCard>
-          <IonHeader>
-          <IonToolbar className='gradient-header'>
-            <IonTitle>Weeklies</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-          <IonCardContent className='ion-no-padding'>
-        <IonList>
-          {weeklies.map((activity, i) => (
-            <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal} edit_func={OpenActivityEditorModal}/>
-          ))}
-        </IonList>
-</IonCardContent>
-        </IonCard>
       </IonContent>
     </IonPage>
   );

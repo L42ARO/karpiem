@@ -13,7 +13,7 @@ import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-com
 import { OverrideModal } from '../components/OverrideModal';
 import { ActivityEditorModal, ActivityEditorModalProps } from '../components/ActivityEditorModal';
 
-interface DayActivityResponse{
+interface DayActivityResponse {
   id: string;
   name: string;
   d_poms: number;
@@ -22,7 +22,7 @@ interface DayActivityResponse{
   focus: boolean;
 }
 
-interface DayActivitiesResponse{
+interface DayActivitiesResponse {
   habits: DayActivityResponse[];
   options: DayActivityResponse[];
   total_poms: number;
@@ -31,7 +31,7 @@ interface DayActivitiesResponse{
 
 
 const Tab1: React.FC = () => {
-  const {socket, connect, disconnect, serverURL, showToast} = useServer();
+  const { socket, connect, disconnect, serverURL, showToast } = useServer();
   // const [dayActivitiesResponse, setDayActivitiesResponse] = useState<DayActivitiesResponse>();
   const [habits, setHabits] = useState<SimplifiedActivity[]>([]);
   const [options, setOptions] = useState<SimplifiedActivity[]>([]);
@@ -41,10 +41,10 @@ const Tab1: React.FC = () => {
   const location = useLocation();
   const [day_blocked, setDayBlocked] = useState<boolean>(false);
   const [overrideModalPresent, overrideModalDismiss] = useIonModal(OverrideModal, {
-    onDismiss: (data:string, role:string)=>overrideModalDismiss(data, role)
+    onDismiss: (data: string, role: string) => overrideModalDismiss(data, role)
   });
   const [currentEditorSettings, setCurrentEditorSettings] = useState<ActivityEditorModalProps>({
-    onDismiss:()=>{},
+    onDismiss: () => { },
     newActivity: true,
     daily: false
   });
@@ -52,7 +52,7 @@ const Tab1: React.FC = () => {
 
   useEffect(() => {
     //Check if it's current location programmatically
-    if(location.pathname === '/tab1'){
+    if (location.pathname === '/tab1') {
       console.log("Tab1 re-entered");
       getDayActivities();
       getSettings();
@@ -65,22 +65,22 @@ const Tab1: React.FC = () => {
   }
   const handleSocketMessage = (msg: MessageEvent) => {
     //If message includes : then it is a key:value pair, else just print the message
-    if(msg.data.includes('::')){
+    if (msg.data.includes('::')) {
       var data = msg.data.split('::');
       var key = data[0];
       var value = data[1];
 
-      if (key === "SINGLE_UPDATE"){
-        console.log("SINGLE_UPDATE:",value);
+      if (key === "SINGLE_UPDATE") {
+        console.log("SINGLE_UPDATE:", value);
         //VAlue is a json string
         var activity_res = JSON.parse(value) as UpdateActivityResponse;
         //Go through the habits and options and update the ones that match the updated activity id
-        if(activity_res){
+        if (activity_res) {
           setHabits(prevState => {
             //Check for the activity in the habits and only update d_done
-            const updatedhabits = prevState?.map(activity=>{
+            const updatedhabits = prevState?.map(activity => {
               const updated_activity = activity_res.updated_activity;
-              if(activity.id === updated_activity.id){
+              if (activity.id === updated_activity.id) {
                 var full = updated_activity.d_done >= updated_activity.d_poms || updated_activity.w_done >= updated_activity.w_poms;
                 return {
                   ...activity,
@@ -100,9 +100,9 @@ const Tab1: React.FC = () => {
             return updatedhabits;
           })
           setOptions(prevState => {
-            const updatedOptions = prevState?.map(activity=>{
+            const updatedOptions = prevState?.map(activity => {
               const updated_activity = activity_res.updated_activity;
-              if(activity.id === activity_res.updated_activity.id){
+              if (activity.id === activity_res.updated_activity.id) {
                 const full = updated_activity.d_done >= updated_activity.d_poms || updated_activity.w_done >= updated_activity.w_poms;
                 return {
                   ...activity,
@@ -125,14 +125,14 @@ const Tab1: React.FC = () => {
         }
 
       }
-      if (key === "SINGLE_NEW"){
-        console.log("NEW:",value);
+      if (key === "SINGLE_NEW") {
+        console.log("NEW:", value);
       }
-      if(key === "SINGLE_DELETE"){
-        console.log("DELETE:",value);
+      if (key === "SINGLE_DELETE") {
+        console.log("DELETE:", value);
         const res = JSON.parse(value) as DeleteActivityResponse;
         //Go through the habits and options and delete the ones that match the deleted activity id
-        if(res){
+        if (res) {
           setHabits(prevState => {
             const updatedHabits = prevState?.filter(activity => activity.id !== res.deleted_id);
             return updatedHabits;
@@ -143,11 +143,11 @@ const Tab1: React.FC = () => {
           });
         }
       }
-      if(key === "BATCH_RESET"){
-        console.log("RESETING:",value);
+      if (key === "BATCH_RESET") {
+        console.log("RESETING:", value);
       }
 
-    }else{
+    } else {
       console.log(msg.data);
     }
   }
@@ -155,15 +155,15 @@ const Tab1: React.FC = () => {
     getDayActivities();
     getSettings();
     connect(handleSocketMessage);
-     
+
     return () => {
       disconnect();
     }
   }, []);
-  async function getSettings(){
-    try{
+  async function getSettings() {
+    try {
       const res = await fetch(serverURL + '/get_setting');
-      if (!res.ok){
+      if (!res.ok) {
         var resTxt = await res.text();
         throw new Error(resTxt);
       }
@@ -172,39 +172,39 @@ const Tab1: React.FC = () => {
       const days_max = data.days_max;
       //Convert the days_max to a number array
       var days_max_array = [];
-      for (var i = 0; i < days_max.length; i+=2){
-        days_max_array.push(parseInt(days_max.substring(i, i+2), 16));
+      for (var i = 0; i < days_max.length; i += 2) {
+        days_max_array.push(parseInt(days_max.substring(i, i + 2), 16));
       }
       //Depending on the day of the week, set the day_max (Monday is 0, Sunday is 6)
       var now = new Date();
-  var today = now.getDay()-1;
-  var currentHour = now.getHours();
-  if (currentHour < 4) today = (today - 1) % 7;
-  if(today < 0) today = today + 7;
-  //Get the day as M, T, W, R, F, S, U
+      var today = now.getDay() - 1;
+      var currentHour = now.getHours();
+      if (currentHour < 4) today = (today - 1) % 7;
+      if (today < 0) today = today + 7;
+      //Get the day as M, T, W, R, F, S, U
       setDayMax(days_max_array[today]);
     }
-    catch(err){
+    catch (err) {
       console.log(err);
       showToast(`Error getting settings: ${(err as Error).message}`, "danger");
     }
   }
-async function getDayActivities() {
-  var now = new Date();
-  var today = now.getDay()-1;
-  var currentHour = now.getHours();
-  if (currentHour < 4) today = (today - 1) % 7;
-  if(today < 0) today = today + 7;
-  //Get the day as M, T, W, R, F, S, U
-  var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
+  async function getDayActivities() {
+    var now = new Date();
+    var today = now.getDay() - 1;
+    var currentHour = now.getHours();
+    if (currentHour < 4) today = (today - 1) % 7;
+    if (today < 0) today = today + 7;
+    //Get the day as M, T, W, R, F, S, U
+    var day = ['M', 'T', 'W', 'R', 'F', 'S', 'U'][today];
 
-  try {
-    const response = await fetch(serverURL + '/get_all_activities');
-    if (!response.ok){
-      var resTxt = await response.text();
-      throw new Error(resTxt);
-    }
-    const data = await response.json() as GetAllActivitiesResponse;
+    try {
+      const response = await fetch(serverURL + '/get_all_activities');
+      if (!response.ok) {
+        var resTxt = await response.text();
+        throw new Error(resTxt);
+      }
+      const data = await response.json() as GetAllActivitiesResponse;
       //Filter the activities to only include the ones that are active and have the day in their days
       data.activities = data.activities.filter(activity => activity.active && activity.days.indexOf(day) > -1);
       data.activities.sort((a, b) => {
@@ -212,7 +212,7 @@ async function getDayActivities() {
           const a_full = a.d_done >= a.d_poms || a.w_done >= a.w_poms;
           const b_full = b.d_done >= b.d_poms || b.w_done >= b.w_poms;
           if (a_full === b_full) {
-            return 0; 
+            return 0;
           } else {
             return a_full ? 1 : -1;
           }
@@ -260,7 +260,7 @@ async function getDayActivities() {
       });
       setHabits(habits_simplified);
       setOptions(options_simplified);
-      
+
     } catch (error) {
       console.log(error);
       // presentToastInfo((error as Error).message);
@@ -271,10 +271,10 @@ async function getDayActivities() {
   useEffect(() => {
     //Update the done count, go through the habits and weeklies and update the ones that match the updated activity id
     var newTotal = 0;
-    habits.forEach(activity=>{
+    habits.forEach(activity => {
       newTotal += activity.d_done;
     });
-    options.forEach(activity=>{
+    options.forEach(activity => {
       newTotal += activity.d_done;
     });
     setTotalDone(newTotal);
@@ -284,11 +284,11 @@ async function getDayActivities() {
   }, [day_max]);
   useEffect(() => {
     //If the total done is greater than the day max, block the day
-    if(total_done >= day_max){
+    if (total_done >= day_max) {
       setDayBlocked(true);
       setDisplayedDayMax(total_done);
     }
-    else{
+    else {
       setDayBlocked(false);
       setDisplayedDayMax(day_max);
     }
@@ -304,7 +304,7 @@ async function getDayActivities() {
       },
     });
   }
-  const OpenActivityEditorModal = (activityData?: SimplifiedActivity, newActivity?:boolean, daily?:boolean) => {
+  const OpenActivityEditorModal = (activityData?: SimplifiedActivity, newActivity?: boolean, daily?: boolean) => {
     setCurrentEditorSettings({
 
       onDismiss: (data?: string | null | undefined | number, role?: string) => activityEditorModalDismiss(data, role),
@@ -322,91 +322,98 @@ async function getDayActivities() {
     });
   }
   const testNotification = async () => {
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      // Permission granted, trigger the timer in the service worker
-      navigator.serviceWorker.controller?.postMessage({ action: 'startTimer' });
-    } else {
-      console.warn('Permission for notifications denied');
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        // Permission granted, trigger the timer in the service worker
+        navigator.serviceWorker.controller?.postMessage({ action: 'startTimer' });
+      } else {
+        console.warn('Permission for notifications denied');
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
     }
-  } catch (error) {
-    console.error('Error requesting notification permission:', error);
-  }
   }
 
   return (
     <>
-    <IonPage>
-      <IonHeader id="header">
-        <IonToolbar>
-          <IonTitle>Day</IonTitle>
-          <IonButton slot="end" color="primary" shape="round" onClick={e=>OpenActivityEditorModal()}>
-            <IonIcon icon={add} />
-          </IonButton>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent fullscreen={true} className='ion-padding-top'>
-        {/* <ActivityEditorModal trigger='add-activity-trigger' newActivity={true} /> */}
-        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
-          <IonRefresherContent></IonRefresherContent>
-        </IonRefresher>
-        <IonGrid fixed={true}>
-          <IonRow className='ion-justify-content-center ion-padding-horizontal'>
-            {Array.from({ length: displayed_day_max}, (_, i) => i).map((_, i) => {
-              var mark_done = i < total_done;
-              return <IonCol key={i} size="1.5" size-md="1" className='ion-no-padding'>
-                <div className={`pom_circle ${mark_done?"complete":""}`}>
-                <IonIcon icon={timeOutline} />
-                </div>
+      <IonPage>
+        <IonHeader id="header">
+          <IonToolbar>
+            <IonTitle>Day</IonTitle>
+            <IonButton slot="end" color="primary" shape="round" onClick={e => OpenActivityEditorModal()}>
+              <IonIcon icon={add} />
+            </IonButton>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent fullscreen={true} className='ion-padding-top'>
+          {/* <ActivityEditorModal trigger='add-activity-trigger' newActivity={true} /> */}
+          <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+            <IonRefresherContent></IonRefresherContent>
+          </IonRefresher>
+          <IonGrid>
+            <IonRow className='ion-justify-content-center'>
+              <IonCol size="12" sizeLg="8">
+                <IonGrid fixed={true}>
+                  <IonRow className='ion-justify-content-center ion-padding-horizontal'>
+                    {Array.from({ length: displayed_day_max }, (_, i) => i).map((_, i) => {
+                      var mark_done = i < total_done;
+                      return <IonCol key={i} size="1.5" size-md="1" className='ion-no-padding'>
+                        <div className={`pom_circle ${mark_done ? "complete" : ""}`}>
+                          <IonIcon icon={timeOutline} />
+                        </div>
+                      </IonCol>
+                    })}
+                  </IonRow>
+                </IonGrid>
+                <IonCard >
+                  <IonHeader>
+                    <IonToolbar className='gradient-header'>
+                      <IonTitle>Today</IonTitle>
+                    </IonToolbar>
+                  </IonHeader>
+                  <IonCardContent className='ion-no-padding'>
+                    <IonList>
+                      {habits.map((activity, i) => (
+                        <ActivityItem
+                          key={activity.id}
+                          activityData={activity}
+                          blocked={day_blocked}
+                          override_func={OpenOverrideModal}
+                          edit_func={OpenActivityEditorModal}
+                          daily
+                        />
+                      ))}
+                    </IonList>
+                  </IonCardContent>
+                </IonCard>
+                <IonCard>
+                  <IonHeader>
+                    <IonToolbar className='gradient-header'>
+                      <IonTitle>Options</IonTitle>
+                    </IonToolbar>
+                  </IonHeader>
+                  <IonCardContent className='ion-no-padding'>
+                    <IonList>
+                      {options.map((activity, i) => (
+                        <ActivityItem
+                          key={activity.id}
+                          activityData={activity}
+                          blocked={day_blocked}
+                          override_func={OpenOverrideModal}
+                          edit_func={OpenActivityEditorModal}
+                        />
+                      ))}
+                    </IonList>
+                  </IonCardContent>
+                </IonCard>
               </IonCol>
-            })}
-          </IonRow>
-        </IonGrid>
-      <IonCard >
-        <IonHeader>
-          <IonToolbar className='gradient-header'>
-            <IonTitle>Today</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-          <IonCardContent className='ion-no-padding'>
-            <IonList>
-              {habits.map((activity, i) => (
-                <ActivityItem 
-                  key={activity.id} 
-                  activityData={activity} 
-                  blocked={day_blocked} 
-                  override_func={OpenOverrideModal}
-                  edit_func={OpenActivityEditorModal}
-                  daily
-                />
-              ))}
-            </IonList>
-          </IonCardContent>
-        </IonCard>
-        <IonCard>
-          <IonHeader>
-          <IonToolbar className='gradient-header'>
-            <IonTitle>Options</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-          <IonCardContent className='ion-no-padding'>
-        <IonList>
-          {options.map((activity, i) => (
-            <ActivityItem 
-              key={activity.id}
-              activityData={activity}
-              blocked={day_blocked} 
-              override_func={OpenOverrideModal}
-              edit_func={OpenActivityEditorModal}
-            />
-          ))}
-        </IonList>
-</IonCardContent>
-        </IonCard>
-        
-      </IonContent>
-    </IonPage>
+            </IonRow>
+          </IonGrid>
+
+
+        </IonContent>
+      </IonPage>
     </>
   );
 };
