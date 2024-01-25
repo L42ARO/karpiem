@@ -16,6 +16,7 @@ export interface SimplifiedActivity{
   days: string;
   full: boolean;
   focus: boolean;
+  focus_time?: number;
   active: boolean;
 }
 export interface ActivityItemProps {
@@ -141,10 +142,16 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
         </IonItemOptions>
 
          <IonItem id="update-modal-trigger" color={activityData.focus ? "primary":activityData.full ? "danger":""}>
-          <IonLabel slot='start'>{activityData.name}</IonLabel>
-          <IonButton fill="clear" color="medium" onClick={e=>edit_func?.(activityData, false, daily)}>
+          <IonLabel slot='start' onClick={e=>edit_func?.(activityData,false, daily)}>{activityData.name}</IonLabel>
+          {/* <IonButton fill="clear" color="medium" onClick={e=>edit_func?.(activityData, false, daily)}>
             <IonIcon icon={create}/>
-            </IonButton>
+            </IonButton> */}
+            {activityData.focus_time != null &&
+            <IonChip slot='start' color={activityData.focus ? "dark": activityData.full?"dark":"primary"}>
+              {/* Focus time is in seconds so convert it to mm:ss*/
+              new Date(activityData.focus_time * 1000).toISOString().substr(14, 5)
+              }
+              </IonChip>}
           <IonChip slot='end' color={activityData.focus ? "dark": activityData.full?"dark":"primary"}>
             {!week_view?activityData.d_done:activityData.w_done}
             /

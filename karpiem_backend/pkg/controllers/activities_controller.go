@@ -1,15 +1,16 @@
 package controllers
 
 import (
-	"log"
 	"encoding/json"
+	"log"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"karpiem/pkg/data"
 	"karpiem/pkg/models"
 	"karpiem/pkg/services"
+	"karpiem/pkg/shared"
 )
 
 func CreateActivityHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +27,7 @@ func CreateActivityHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Determine Poms based on Daily flag
-	if request.Daily && request.Poms == 0{
+	if request.Daily && request.Poms == 0 {
 		request.Poms = 7 * request.Max
 	}
 
@@ -53,18 +54,18 @@ func CreateActivityHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast the change to all the clients in the room
 	//Check if the room exists
-	if WS_Rooms[request.RoomID] != nil {
+	if shared.WS_Rooms[request.RoomID] != nil {
 		//Send the message to all the clients in the room
 		var response models.CreateActivityResponse
 		response.New_Activity = activity
 		//Stringify the response
 		response_string, err := json.Marshal(response)
-		if err != nil{
+		if err != nil {
 			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
-		for _, conn := range WS_Rooms[request.RoomID]{
+		for _, conn := range shared.WS_Rooms[request.RoomID] {
 			//Send the message with the prefix SINGLE_UPDATE:
-			conn.WriteMessage(1, []byte("SINGLE_NEW::" + string(response_string)))
+			conn.WriteMessage(1, []byte("SINGLE_NEW::"+string(response_string)))
 		}
 	}
 
@@ -97,7 +98,6 @@ func GetAllActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 
 }
-
 
 func GetDayActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 	//Get current day from url query
@@ -135,7 +135,7 @@ func GetDayActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 	var dailies []models.DayActivityResponse
 	var options []models.DayActivityResponse
 	for _, activity := range activities {
-		shortened_activity:= models.DayActivityResponse{
+		shortened_activity := models.DayActivityResponse{
 			ID:    activity.ID,
 			Name:  activity.Name,
 			DPoms: activity.DPoms,
@@ -144,15 +144,14 @@ func GetDayActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 			Focus: activity.Focus,
 		}
 		//Dailies are the ones whose WPoms = 7 * DPoms
-		if activity.WPoms == 7 * activity.DPoms {
+		if activity.WPoms == 7*activity.DPoms {
 			dailies = append(dailies, shortened_activity)
-		}else{
+		} else {
 			options = append(options, shortened_activity)
 		}
 		totalPoms += activity.DPoms
 		totalDone += activity.DDone
 	}
-
 
 	var response models.DayAcitivitiesResponse
 	response.Dailies = dailies
@@ -164,36 +163,36 @@ func GetDayActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func GetWeekActivitiesHandler(w http.ResponseWriter, r *http.Request){
+func GetWeekActivitiesHandler(w http.ResponseWriter, r *http.Request) {
 	db := data.GetDB()
 	var activities []data.Activity
 	//Get all activities that are active
 	query := db.Where("active = ?", true)
-	if err := query.Find(&activities).Error; err != nil{
+	if err := query.Find(&activities).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	var totalPoms int64
 	var totalDone int64
-	
+
 	var dailies []models.WeekActivityResponse
 	var weeklies []models.WeekActivityResponse
 	for _, activity := range activities {
-		shortened_activity:= models.WeekActivityResponse{
-			ID: activity.ID,
-			Name: activity.Name,
+		shortened_activity := models.WeekActivityResponse{
+			ID:    activity.ID,
+			Name:  activity.Name,
 			WPoms: activity.WPoms,
 			WDone: activity.WDone,
-			Full: activity.WDone >= activity.WPoms,
+			Full:  activity.WDone >= activity.WPoms,
 			Focus: activity.Focus,
 		}
 		//Get the number of days the activity is active, should be the number of characters in the Days field
 		days_active := len(activity.Days)
 		//Dailies are the ones whose WPoms = days_active * DPoms
 
-		if activity.WPoms == int64(days_active) * activity.DPoms {
+		if activity.WPoms == int64(days_active)*activity.DPoms {
 			dailies = append(dailies, shortened_activity)
-		}else{
+		} else {
 			weeklies = append(weeklies, shortened_activity)
 		}
 		totalPoms += activity.WPoms
@@ -205,12 +204,10 @@ func GetWeekActivitiesHandler(w http.ResponseWriter, r *http.Request){
 	response.Weeklies = weeklies
 	response.TotalPoms = totalPoms
 	response.TotalDone = totalDone
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
-
-
 
 func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 	var request models.ChangeDoneRequest
@@ -244,7 +241,6 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	var newWDone int64
 	var newDDone int64
 
@@ -252,11 +248,11 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 		newDDone = int64(request.Value)
 		delta := newDDone - activity.DDone
 		newWDone = activity.WDone + delta
-	}else{
+	} else {
 		newWDone = int64(request.Value)
 		if int64(request.Value) < activity.DDone {
 			newDDone = int64(request.Value) //Eg: if we request the week poms to lower from 3 to 1 and the day poms is 2, we need to lower the day poms to 1
-		}else{
+		} else {
 			newDDone = activity.DDone
 		}
 	}
@@ -290,18 +286,18 @@ func ChangeDoneHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	//Broadcast the change to all the clients in the room
 	//Check if the room exists
-	if WS_Rooms[request.RoomID] != nil {
+	if shared.WS_Rooms[request.RoomID] != nil {
 		//Send the message to all the clients in the room
 		var response models.UpdateActivityResponse
 		response.Updated_Activity = activity
 		//Stringify the response
 		response_string, err := json.Marshal(response)
-		if err != nil{
+		if err != nil {
 			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
-		for _, conn := range WS_Rooms[request.RoomID]{
+		for _, conn := range shared.WS_Rooms[request.RoomID] {
 			//Send the message with the prefix SINGLE_UPDATE:
-			conn.WriteMessage(1, []byte("SINGLE_UPDATE::" + string(response_string)))
+			conn.WriteMessage(1, []byte("SINGLE_UPDATE::"+string(response_string)))
 
 		}
 	}
@@ -336,13 +332,12 @@ func ResetWeekHandler(w http.ResponseWriter, r *http.Request) {
 	room_id := r.URL.Query().Get("room_id")
 	//Broadcast the change to all the clients in the room
 	//Check if the room exists
-	if WS_Rooms[room_id] != nil {
-		for _, conn := range WS_Rooms[room_id]{
+	if shared.WS_Rooms[room_id] != nil {
+		for _, conn := range shared.WS_Rooms[room_id] {
 			//Send it as command BATCH_RESET
 			conn.WriteMessage(1, []byte("BATCH_RESET::WEEK"))
 		}
 	}
-
 
 	// Send success response to client
 	w.WriteHeader(http.StatusOK)
@@ -372,8 +367,8 @@ func ResetDayHandler(w http.ResponseWriter, r *http.Request) {
 	room_id := r.URL.Query().Get("room_id")
 	//Broadcast the change to all the clients in the room
 	//Check if the room exists
-	if WS_Rooms[room_id] != nil {
-		for _, conn := range WS_Rooms[room_id]{
+	if shared.WS_Rooms[room_id] != nil {
+		for _, conn := range shared.WS_Rooms[room_id] {
 			//Send it as command BATCH_RESET
 			conn.WriteMessage(1, []byte("BATCH_RESET::DAY"))
 		}
@@ -382,10 +377,10 @@ func ResetDayHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
+func DeleteActivityHandler(w http.ResponseWriter, r *http.Request) {
 	var request models.DeleteActivityRequest
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&request); err != nil{
+	if err := decoder.Decode(&request); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -405,7 +400,7 @@ func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
 	activity_name := activity.Name
 
 	//Delete the activity
-	delete_res:= db.Where("id = ?", deleteId).Delete(&data.Activity{})
+	delete_res := db.Where("id = ?", deleteId).Delete(&data.Activity{})
 	if delete_res.Error != nil {
 		http.Error(w, "Failed to delete activity", http.StatusInternalServerError)
 		return
@@ -417,16 +412,16 @@ func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
 	response.Deleted_ID = deleteId
 	response.Deleted_Name = activity_name
 
-	if WS_Rooms[request.RoomID] != nil {
+	if shared.WS_Rooms[request.RoomID] != nil {
 		//Send the message to all the clients in the room
 		//Stringify the response
 		response_string, err := json.Marshal(response)
-		if err != nil{
+		if err != nil {
 			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
-		for _, conn := range WS_Rooms[request.RoomID]{
+		for _, conn := range shared.WS_Rooms[request.RoomID] {
 			//Send the message with the prefix SINGLE_UPDATE:
-			conn.WriteMessage(1, []byte("SINGLE_DELETE::" + string(response_string)))
+			conn.WriteMessage(1, []byte("SINGLE_DELETE::"+string(response_string)))
 		}
 	}
 
@@ -436,22 +431,22 @@ func DeleteActivityHandler(w http.ResponseWriter, r *http.Request){
 
 }
 
-func UpdateActivityHandler(w http.ResponseWriter, r *http.Request){
+func UpdateActivityHandler(w http.ResponseWriter, r *http.Request) {
 	var request models.UpdateActivityRequest
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&request); err != nil{
+	if err := decoder.Decode(&request); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
-	if request.Daily{
+	if request.Daily {
 		request.Poms = 7 * request.Max
 	}
 
 	db := data.GetDB()
 	var activity data.Activity
-	 
+
 	// Find the activity by ID
 	result := db.Where("id = ?", request.ID).First(&activity)
 	if result.Error != nil {
@@ -473,21 +468,20 @@ func UpdateActivityHandler(w http.ResponseWriter, r *http.Request){
 
 	//Broadcast the change to all the clients in the room
 	//Check if the room exists
-	if WS_Rooms[request.RoomID] != nil {
+	if shared.WS_Rooms[request.RoomID] != nil {
 		//Send the message to all the clients in the room
 		var response models.UpdateActivityResponse
 		response.Updated_Activity = activity
 		//Stringify the response
 		response_string, err := json.Marshal(response)
-		if err != nil{
+		if err != nil {
 			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
-		for _, conn := range WS_Rooms[request.RoomID]{
+		for _, conn := range shared.WS_Rooms[request.RoomID] {
 			//Send the message with the prefix SINGLE_UPDATE:
-			conn.WriteMessage(1, []byte("SINGLE_UPDATE::" + string(response_string)))
+			conn.WriteMessage(1, []byte("SINGLE_UPDATE::"+string(response_string)))
 		}
 	}
-
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -495,10 +489,10 @@ func UpdateActivityHandler(w http.ResponseWriter, r *http.Request){
 
 }
 
-func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
+func FocusRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var request models.FocusRequest
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&request); err != nil{
+	if err := decoder.Decode(&request); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -514,14 +508,14 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 	trigger_start_check := false
 	trigger_stop_check := false
 
-	if request.Focus{
+	if request.Focus {
 		var other_focus data.Activity
 		result := db.Where("focus = ?", true).First(&other_focus)
 		if result.Error != nil && result.Error.Error() != "record not found" {
 			http.Error(w, "Error checking for focus", http.StatusNotFound)
 			return
 		}
-		if result.RowsAffected != 0{
+		if result.RowsAffected != 0 {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusConflict)
 			json.NewEncoder(w).Encode(other_focus)
@@ -529,15 +523,16 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 		}
 
 		//We will start the focus timer go-routine
-		curr_focus_time := activity.FocusTime
 		trigger_start_check = true
-		services.TriggerTimer("123456789", curr_focus_time)
+		services.TriggerTimer("123456789", request.ID, request.RoomID)
 
-	}else{
+	} else {
 		//Use the focus time from the request as the new focus time
-		activity.FocusTime = request.FocusTime
+		// activity.FocusTime = request.FocusTime //TODO: Uncomment this line when frontend timer is working
 		trigger_stop_check = true
+		log.Printf("Stopping timer")
 		services.StopTimer("123456789")
+		log.Printf("Timer stopped")
 	}
 
 	activity.Focus = request.Focus
@@ -548,7 +543,7 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 	}
 	//Broadcast the change to all the clients in the room
 	//Check if the room exists
-	if WS_Rooms[request.RoomID] != nil {
+	if shared.WS_Rooms[request.RoomID] != nil {
 		//Send the message to all the clients in the room
 		var response models.UpdateActivityResponse
 		response.Updated_Activity = activity
@@ -556,12 +551,12 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request){
 		response.TriggerStop = trigger_stop_check
 		//Stringify the response
 		response_string, err := json.Marshal(response)
-		if err != nil{
+		if err != nil {
 			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
 		}
-		for _, conn := range WS_Rooms[request.RoomID]{
+		for _, conn := range shared.WS_Rooms[request.RoomID] {
 			//Send the message with the prefix SINGLE_UPDATE:
-			conn.WriteMessage(1, []byte("SINGLE_UPDATE::" + string(response_string)))
+			conn.WriteMessage(1, []byte("SINGLE_UPDATE::"+string(response_string)))
 		}
 	}
 

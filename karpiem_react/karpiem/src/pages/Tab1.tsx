@@ -91,6 +91,7 @@ const Tab1: React.FC = () => {
                   w_done: updated_activity.w_done,
                   d_poms: updated_activity.d_poms,
                   focus: updated_activity.focus,
+                  focus_time: updated_activity.focus_time,
                   full: full
                 }
               }
@@ -112,6 +113,7 @@ const Tab1: React.FC = () => {
                   w_done: updated_activity.w_done,
                   d_poms: updated_activity.d_poms,
                   focus: updated_activity.focus,
+                  focus_time: updated_activity.focus_time,
                   full: full
                 }
               }
@@ -235,6 +237,7 @@ async function getDayActivities() {
           w_done: activity.w_done,
           full: full,
           focus: activity.focus,
+          focus_time: activity.focus_time,
           days: activity.days,
           active: activity.active,
         }
@@ -250,6 +253,7 @@ async function getDayActivities() {
           w_done: activity.w_done,
           full: full,
           focus: activity.focus,
+          focus_time: activity.focus_time,
           days: activity.days,
           active: activity.active,
         }
