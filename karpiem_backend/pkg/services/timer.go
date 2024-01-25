@@ -94,7 +94,7 @@ func Timer(timerChannel *TimerChannel, activity_id string, ws_room string) {
 			// timerChannel.IsOpen = false
 			currFocusTime = 0
 			activity = SetCurrFocusTime(activity_id, currFocusTime, true)
-			SendFocusTime(ws_room, activity, currFocusTime, false, true)
+			SendFocusTime(ws_room, activity, currFocusTime, true, false)
 			log.Println("Goroutine completed at:", currFocusTime, "of", goRoutineTime, "milliseconds")
 			// return
 		}
