@@ -36,7 +36,7 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
   const {serverURL, showToast} = useServer();
   const slider = useRef<HTMLIonItemSlidingElement>(null);
   function ModifyDoneCount(n: number){
-    const check1 = (n<0 && poms_done> 0) || (n>0 && !activityData.full);
+    const check1 = (n<0 && poms_done> 0) || (n>0);// && !activityData.full);
     const check2 = (n<0 || !blocked);
     if (check1){
         //if (check2){
