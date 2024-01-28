@@ -1,7 +1,7 @@
 import { IonAvatar, IonButton, IonCol, IonContent, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPage, IonRow, IonTitle, IonToolbar } from '@ionic/react';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab3.css';
-import { add, playBackCircle, playSkipBackCircle, reload } from 'ionicons/icons';
+import { add, notifications, playBackCircle, playSkipBackCircle, reload } from 'ionicons/icons';
 import { useServer } from '../context/serverContext';
 import { Setting } from '../context/dataContext';
 import React, { useEffect, useRef } from 'react';
@@ -129,6 +129,22 @@ const Tab3: React.FC = () => {
       showToast(`Error updating settings: ${(err as Error).message}`, "danger")
     }
   }
+  const reSubscribePush = async () => {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          // Permission granted, trigger the timer in the service worker
+          navigator.serviceWorker.controller?.postMessage({ action: `subscribePush`, value: "" });
+          showToast(`🔔 Subscription requested`, "primary");
+        } else {
+          var txt = `Permission not granted`
+          throw new Error(txt);
+        }
+      } catch (err) {
+        console.log(err)
+        showToast(`🔔 Error subscribing push: ${(err as Error).message}`)
+      }
+    }
   return (
     <IonPage>
       <IonHeader>
@@ -180,6 +196,13 @@ const Tab3: React.FC = () => {
                 }}>
                   <IonIcon slot='start' icon={playBackCircle} />
                   <IonLabel slot='end'>Reset Week Counts</IonLabel>
+                </IonButton>
+                <IonButton shape='round' expand='block' onClick={e=>{
+                  e.preventDefault();
+                  reSubscribePush();
+                }}>
+                  <IonIcon slot='start' icon={notifications}/>
+                  <IonLabel slot='end'>Re-subscribe Push</IonLabel>
                 </IonButton>
               </IonList>
             </IonCol>

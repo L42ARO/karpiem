@@ -19,6 +19,22 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html'), { allow
 self.skipWaiting();
 clientsClaim();
 
+async function SubscribePushNotification() {
+    try {
+        const subscription = await self.registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array('BHuIVp9rJ2EJoA9LKFXI2kJB9Y0f0womlgLHiHgfygU9h4jGGI9sFfoCILYc8_TZNi98RuE3LHAXb9QwQOVr9XA')
+        });
+
+        const response = await saveSubscription(subscription);
+        console.log(`Save subscription response: ${response}`);
+        return Promise.resolve("Push Subscription: Success");
+    } catch (err) {
+        console.warn(`Save subscription error: ${err}`);
+        return Promise.reject("Push Subscription: Failed");
+    }
+}
+
 // Timer variables
 let timerId: NodeJS.Timeout | undefined;
 
@@ -28,10 +44,22 @@ self.addEventListener('message', (event) => {
     if (event.data.action === 'startTimer') {
         event.waitUntil(startTimer(event.data.value));
     }
-    if(event.data.action==="notifyTimer"){
+    if (event.data.action === "notifyTimer") {
         self.registration.showNotification('Timer Alert', {
             body: `${event.data.value} seconds timer has expired!`,
         });
+    }
+    if(event.data.action === "subscribePush"){
+        console.log("Subscribing Push Manually");
+        SubscribePushNotification()
+            .then(res => {
+                console.log(res);
+                self.registration.showNotification(`✅ ${res}`);
+            })
+            .catch(err=>{
+                console.log(err);
+                self.registration.showNotification(`❌ ${err}`);
+            });
     }
 });
 
@@ -66,14 +94,14 @@ const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
 }
 
 const saveSubscription = async (subscription: PushSubscription): Promise<any> => {
-  //Check if we are running on localhost
-  const isLocalhost = Boolean(
-      self.location.hostname === 'localhost' ||
-      // [::1] is the IPv6 localhost address.
-      self.location.hostname === '[::1]');
+    //Check if we are running on localhost
+    const isLocalhost = Boolean(
+        self.location.hostname === 'localhost' ||
+        // [::1] is the IPv6 localhost address.
+        self.location.hostname === '[::1]');
 
     const serverURL = isLocalhost ? 'http://localhost:8080' : 'https://karpiem.up.railway.app';
-    const response = await fetch(serverURL+'/save-subscription', {
+    const response = await fetch(serverURL + '/save-subscription', {
         method: 'post',
         headers: { 'Content-type': 'application/json' },
         body: JSON.stringify({
@@ -82,8 +110,8 @@ const saveSubscription = async (subscription: PushSubscription): Promise<any> =>
     });
 
     if (!response.ok) {
-      const txt = await response.text();
-      throw new Error(txt);
+        const txt = await response.text();
+        throw new Error(txt);
     }
 
     return "Success";
@@ -91,20 +119,18 @@ const saveSubscription = async (subscription: PushSubscription): Promise<any> =>
 
 self.addEventListener('activate', async (e: ExtendableEvent) => {
     console.log('Service worker activating...');
-    try{
-      const subscription = await self.registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array('BHuIVp9rJ2EJoA9LKFXI2kJB9Y0f0womlgLHiHgfygU9h4jGGI9sFfoCILYc8_TZNi98RuE3LHAXb9QwQOVr9XA')
-      });
-
-      const response = await saveSubscription(subscription);
-      console.log(`Save subscription response: ${response}`);
-    }catch(err){
-      console.warn(`Save subscription error: ${err}`);
-    }
+    SubscribePushNotification()
+        .then(res => {
+            console.log(res);
+            self.registration.showNotification(`✅ ${res}`);
+        })
+        .catch(err=>{
+            console.log(err);
+            self.registration.showNotification(`❌ ${err}`);
+        });
 });
 
 self.addEventListener('push', (e: PushEvent) => {
-    self.registration.showNotification('Wohoo!!', { body: e.data!.text() });
+    self.registration.showNotification('Karpiem', { body: e.data!.text() });
 });
 
