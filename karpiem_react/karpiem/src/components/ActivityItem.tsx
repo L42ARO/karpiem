@@ -82,6 +82,35 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
       showToast(`Error focusing: ${(err as Error).message}`, "danger");
     }
   }
+  async function OverrideFocusTime(){
+    var request:UpdateFocusRequest = {
+        id: activityData.id,
+        focus: false,
+        focus_time: 0,
+        room_id:"123456789"
+    };
+    try{
+      var res = await fetch(serverURL + '/override_focus_time', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(request)
+      })
+      if (res.ok){
+        const data: Activity = await res.json();
+        showToast(`Focus time for ${data.name} overridden`, "primary");
+      }
+      else{
+        const txt = await res.text();
+        throw new Error(txt);
+      }
+      slider.current?.close();
+    }catch(err){
+      console.log(err);
+      showToast(`Error overriding time: ${(err as Error).message}`, "danger");
+    }
+  }
   useEffect(() => {
     if(!week_view){
         if(activityData.d_done != poms_done)
@@ -147,7 +176,11 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
             <IonIcon icon={create}/>
             </IonButton> */}
             {activityData.focus_time != null &&
-            <IonChip slot='start' color={activityData.focus ? "dark": activityData.full?"dark":"primary"}>
+            <IonChip 
+              slot='start' 
+              color={activityData.focus ? "dark": activityData.full?"dark":"primary"}
+              onClick={e=>OverrideFocusTime()}
+              >
               {/* Focus time is in seconds so convert it to mm:ss*/
               new Date(activityData.focus_time * 1000).toISOString().substr(14, 5)
               }

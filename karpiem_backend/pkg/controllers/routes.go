@@ -9,13 +9,15 @@ func SetupHandlers() {
 	http.HandleFunc("/day_activities", GetDayActivitiesHandler)
 	http.HandleFunc("/week_activities", GetWeekActivitiesHandler)
 	http.HandleFunc("/get_all_activities", GetAllActivitiesHandler)
-	http.HandleFunc("/focus_activity", FocusRequestHandler)
 	http.HandleFunc("/change_done", ChangeDoneHandler)
 	http.HandleFunc("/delete_activity", DeleteActivityHandler)
 	http.HandleFunc("/update_activity", UpdateActivityHandler)
 	http.HandleFunc("/admin", AdminViewHandler)
 	http.HandleFunc("/reset_day", ResetDayHandler)
 	http.HandleFunc("/reset_week", ResetWeekHandler)
+
+	http.HandleFunc("/focus_activity", FocusRequestHandler)
+	http.HandleFunc("/override_focus_time", OverrideFocusTimeHandler)
 
 	http.HandleFunc("/update_setting", UpdateSettingHandler)
 	http.HandleFunc("/get_setting", GetSettingHandler)

@@ -564,3 +564,52 @@ func FocusRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(activity)
 }
+
+func OverrideFocusTimeHandler(w http.ResponseWriter, r *http.Request) {
+	var request models.FocusRequest
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	db := data.GetDB()
+	var activity data.Activity
+	result := db.Where("id = ?", request.ID).First(&activity)
+	if result.Error != nil {
+		http.Error(w, "Activity not found", http.StatusNotFound)
+		return
+	}
+	//If activity is focused right now, return an error
+	if activity.Focus {
+		http.Error(w, "Activity is currently focused", http.StatusConflict)
+		return
+	}
+	//Change the focus time of the activity to the request value
+	activity.FocusTime = request.FocusTime
+
+	result = db.Save(&activity)
+	if result.Error != nil {
+		http.Error(w, "Failed to update activity", http.StatusInternalServerError)
+		return
+	}
+
+	if shared.WS_Rooms[request.RoomID] != nil {
+		//Send the message to all the clients in the room
+		var response models.UpdateActivityResponse
+		response.Updated_Activity = activity
+		//Stringify the response
+		response_string, err := json.Marshal(response)
+		if err != nil {
+			http.Error(w, "Error broadcasting change", http.StatusMultiStatus)
+		}
+		for _, conn := range shared.WS_Rooms[request.RoomID] {
+			//Send the message with the prefix SINGLE_UPDATE:
+			conn.WriteMessage(1, []byte("SINGLE_UPDATE::"+string(response_string)))
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(activity)
+}
