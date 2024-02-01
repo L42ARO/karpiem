@@ -40,14 +40,16 @@ interface User{
 }
 /*Golang UpdateActivityResponse:
 type UpdateActivityResponse struct {
-	Updated_Activity data.Activity	`json:"updated_activity"`
-	TriggerStart bool `json:"trigger_start"`
-	TriggerStop bool `json:"trigger_stop"`
+	Updated_Activity data.Activity `json:"updated_activity"`
+	TriggerStart     bool          `json:"trigger_start"`
+	TriggerStop      bool          `json:"trigger_stop"`
+	Warn             bool          `json:"warn"`
 }*/
 export interface UpdateActivityResponse{
     updated_activity: Activity;
     trigger_start: boolean;
     trigger_stop: boolean;
+    warn : boolean;
 }
 /*Golang UpdateFocusRequest:
 type FocusRequest struct {
