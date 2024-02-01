@@ -94,7 +94,7 @@ func Timer(timerChannel *TimerChannel, activity_id string, ws_room string) {
 			// timerChannel.IsOpen = false
 			currFocusTime = 0
 			activity = SetCurrFocusTime(activity_id, currFocusTime, true)
-			warn := activity.DDone > activity.DPoms
+			warn := activity.DDone > activity.DPoms || activity.WDone > activity.WPoms
 			SendFocusTime(ws_room, activity, currFocusTime, true, false, warn)
 			msg := "+20 min on " + activity.Name
 			if warn {

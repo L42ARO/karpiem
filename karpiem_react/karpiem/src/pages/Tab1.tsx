@@ -122,6 +122,9 @@ const Tab1: React.FC = () => {
             // const updatedResponse = {...prevState, habits: updatedDailies, options: updatedOptions} as DayActivitiesResponse;
             return updatedOptions;
           });
+          if (activity_res.warn){
+            showToast(`Warning: ${activity_res.updated_activity.name} is going overtime`, "warning");
+          }
         }
 
       }
