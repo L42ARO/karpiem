@@ -24,13 +24,13 @@ export interface ActivityItemProps {
   week_view?: boolean;
   blocked?: boolean;
   daily?: boolean;
-  override_func?: (n:number, changeDone: (poms_done: number, override_key?: string) => Promise<void>) => void;
+  overtime_fuc?: (focusActivity: ()=>Promise<void>) =>void; // (n:number, changeDone: (poms_done: number, override_key?: string) => Promise<void>) => void;
   edit_func?: (activity: SimplifiedActivity, newActivity: boolean, daily?:boolean) => void;
 }
 
 
 export const ActivityItem:React.FC<ActivityItemProps>= (
-    {activityData, week_view, blocked, override_func, edit_func, daily}:ActivityItemProps
+    {activityData, week_view, blocked, overtime_fuc: override_func, edit_func, daily}:ActivityItemProps
 ) => {
   const [poms_done, setPomsDone] = useState<number>(!week_view?activityData.d_done:activityData.w_done);
   const {serverURL, showToast} = useServer();
@@ -48,6 +48,14 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
     //    override_func?.(poms_done+n, ChangeDone);
     //}
     slider.current?.close();
+  }
+  function ModifyFocus(){
+    if(!activityData.focus && activityData.full || blocked){
+        override_func?.(FocusActivity);
+    }
+    else{
+      FocusActivity();
+    }
   }
   async function FocusActivity(){
     var focus = !activityData.focus;
@@ -164,7 +172,7 @@ export const ActivityItem:React.FC<ActivityItemProps>= (
           <IonItemOption color="success" expandable onClick={e=>ModifyDoneCount(1)}>
             <IonIcon icon={add}/>
           </IonItemOption>
-          <IonItemOption color="primary"  onClick={e=>FocusActivity()}>
+          <IonItemOption color="primary"  onClick={e=>ModifyFocus()}>
             <IonIcon slot="top" icon={`${activityData.focus?stop:play}`}/>
             {activityData.focus ? "Unfocus":"Focus"}
           </IonItemOption>

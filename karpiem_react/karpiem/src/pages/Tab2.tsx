@@ -8,7 +8,7 @@ import { useServer } from '../context/serverContext';
 import { useLocation } from 'react-router';
 import { GetAllActivitiesResponse } from '../context/dataContext';
 import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
-import { OverrideModal } from '../components/OverrideModal';
+import { OvertimeConfirmModal } from '../components/OvertimeConfirmModal';
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
 import { ActivityEditorModal, ActivityEditorModalProps } from '../components/ActivityEditorModal';
 
@@ -35,8 +35,8 @@ const Tab2: React.FC = () => {
   const [total_poms, setTotalPoms] = useState<number>(0);
   const [total_done, setTotalDone] = useState<number>(0);
   const location = useLocation();
-  const [overrideModalPresent, overrideModalDismiss] = useIonModal(OverrideModal, {
-    onDismiss: (data: string, role: string) => overrideModalDismiss(data, role)
+  const [overtimeConfirmModalPresent, overtimeConfirmModalDismiss] = useIonModal(OvertimeConfirmModal, {
+    onDismiss: (data: string, role: string) => overtimeConfirmModalDismiss(data, role)
   });
   const [currentEditorSettings, setCurrentEditorSettings] = useState<ActivityEditorModalProps>({
     onDismiss: () => { },
@@ -171,13 +171,13 @@ const Tab2: React.FC = () => {
     setTotalDone(total_done);
 
   }, [dailies, weeklies]);
-  const OpenOverrideModal = (n: number, changeDone: (poms_done: number, override_key?: string) => Promise<void>) => {
-    overrideModalPresent({
+  const OpenOverrideModal = (focusActivity: () => Promise<void>) => {
+    overtimeConfirmModalPresent({
       cssClass: 'translucent-modal',
       onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
         if (ev.detail.role === 'confirm') {
           const key = ev.detail.data as string;
-          changeDone(n, key);
+          focusActivity();
         }
       },
     });
@@ -241,7 +241,7 @@ const Tab2: React.FC = () => {
                 <IonCardContent className='ion-no-padding'>
                   <IonList>
                     {dailies.map((activity, i) => (
-                      <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal} edit_func={OpenActivityEditorModal} />
+                      <ActivityItem key={activity.id} activityData={activity} week_view overtime_fuc={OpenOverrideModal} edit_func={OpenActivityEditorModal} />
                     ))}
                   </IonList>
                 </IonCardContent>
@@ -255,7 +255,7 @@ const Tab2: React.FC = () => {
                 <IonCardContent className='ion-no-padding'>
                   <IonList>
                     {weeklies.map((activity, i) => (
-                      <ActivityItem key={activity.id} activityData={activity} week_view override_func={OpenOverrideModal} edit_func={OpenActivityEditorModal} />
+                      <ActivityItem key={activity.id} activityData={activity} week_view overtime_fuc={OpenOverrideModal} edit_func={OpenActivityEditorModal} />
                     ))}
                   </IonList>
                 </IonCardContent>

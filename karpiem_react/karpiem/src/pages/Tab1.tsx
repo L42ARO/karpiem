@@ -10,7 +10,7 @@ import { Setting } from '../context/dataContext';
 import { useLocation } from 'react-router';
 import { ActivityItem, SimplifiedActivity } from '../components/ActivityItem';
 import { OverlayEventDetail } from '@ionic/react/dist/types/components/react-component-lib/interfaces';
-import { OverrideModal } from '../components/OverrideModal';
+import { OvertimeConfirmModal } from '../components/OvertimeConfirmModal';
 import { ActivityEditorModal, ActivityEditorModalProps } from '../components/ActivityEditorModal';
 
 interface DayActivityResponse {
@@ -40,8 +40,8 @@ const Tab1: React.FC = () => {
   const [displayed_day_max, setDisplayedDayMax] = useState<number>(7);
   const location = useLocation();
   const [day_blocked, setDayBlocked] = useState<boolean>(false);
-  const [overrideModalPresent, overrideModalDismiss] = useIonModal(OverrideModal, {
-    onDismiss: (data: string, role: string) => overrideModalDismiss(data, role)
+  const [overtimeConfirmModalPresent, overtimeConfirmModalDismiss] = useIonModal(OvertimeConfirmModal, {
+    onDismiss: (data: string, role: string) => overtimeConfirmModalDismiss(data, role)
   });
   const [currentEditorSettings, setCurrentEditorSettings] = useState<ActivityEditorModalProps>({
     onDismiss: () => { },
@@ -293,13 +293,13 @@ const Tab1: React.FC = () => {
       setDisplayedDayMax(day_max);
     }
   }, [total_done]);
-  const OpenOverrideModal = (n: number, changeDone: (poms_done: number, override_key?: string) => Promise<void>) => {
-    overrideModalPresent({
+  const OpenOverrideModal = (focusActivity: () => Promise<void>) => {
+    overtimeConfirmModalPresent({
       cssClass: 'translucent-modal',
       onWillDismiss: (ev: CustomEvent<OverlayEventDetail>) => {
         if (ev.detail.role === 'confirm') {
           const key = ev.detail.data as string;
-          changeDone(n, key);
+          focusActivity();
         }
       },
     });
@@ -379,7 +379,7 @@ const Tab1: React.FC = () => {
                           key={activity.id}
                           activityData={activity}
                           blocked={day_blocked}
-                          override_func={OpenOverrideModal}
+                          overtime_fuc={OpenOverrideModal}
                           edit_func={OpenActivityEditorModal}
                           daily
                         />
@@ -400,7 +400,7 @@ const Tab1: React.FC = () => {
                           key={activity.id}
                           activityData={activity}
                           blocked={day_blocked}
-                          override_func={OpenOverrideModal}
+                          overtime_fuc={OpenOverrideModal}
                           edit_func={OpenActivityEditorModal}
                         />
                       ))}
