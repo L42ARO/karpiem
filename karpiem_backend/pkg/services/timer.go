@@ -95,7 +95,12 @@ func Timer(timerChannel *TimerChannel, activity_id string, ws_room string) {
 			currFocusTime = 0
 			activity = SetCurrFocusTime(activity_id, currFocusTime, true)
 			SendFocusTime(ws_room, activity, currFocusTime, true, false)
-			msg := "+20 min on" + activity.Name
+			msg := "+20 min on " + activity.Name
+			if activity.DDone == activity.DPoms {
+				msg = "COMPLETED: " + msg
+			} else if activity.DDone > activity.DPoms {
+				msg = "OVERTIME: " + msg
+			}
 			WebPush(msg)
 			log.Println("Goroutine completed at:", currFocusTime, "of", goRoutineTime, "milliseconds")
 			// return
