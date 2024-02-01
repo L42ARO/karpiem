@@ -60,7 +60,7 @@ func Timer(timerChannel *TimerChannel, activity_id string, ws_room string) {
 	currFocusTime := activity.FocusTime * 1000 //Convert to milliseconds
 
 	log.Println("Goroutine started at:", startTime)
-	SendFocusTime(ws_room, activity, currFocusTime, true, false)
+	SendFocusTime(ws_room, activity, currFocusTime, true, false, false)
 	for {
 		// Calculate delta time in milliseconds and update currFocusTime
 		if time.Since(startTime) > updateFrequency {
@@ -73,7 +73,7 @@ func Timer(timerChannel *TimerChannel, activity_id string, ws_room string) {
 		if time.Since(printStartTime) >= time.Minute {
 			log.Printf("Current Focus Time: %d milliseconds\n", currFocusTime)
 			printStartTime = time.Now()
-			SendFocusTime(ws_room, activity, currFocusTime, true, false)
+			SendFocusTime(ws_room, activity, currFocusTime, true, false, false)
 		}
 
 		// Check if goRoutineTime is reached or stopChan is closed
@@ -82,7 +82,7 @@ func Timer(timerChannel *TimerChannel, activity_id string, ws_room string) {
 			log.Println("Goroutine stopped at:", currFocusTime, "of", goRoutineTime, "milliseconds")
 			//Set on the database the focus time
 			activity = SetCurrFocusTime(activity_id, currFocusTime, false)
-			SendFocusTime(ws_room, activity, currFocusTime, false, true)
+			SendFocusTime(ws_room, activity, currFocusTime, false, true, false)
 			timerChannel.IsOpen = false
 			return
 		default:
@@ -94,12 +94,13 @@ func Timer(timerChannel *TimerChannel, activity_id string, ws_room string) {
 			// timerChannel.IsOpen = false
 			currFocusTime = 0
 			activity = SetCurrFocusTime(activity_id, currFocusTime, true)
-			SendFocusTime(ws_room, activity, currFocusTime, true, false)
+			warn := activity.DDone > activity.DPoms
+			SendFocusTime(ws_room, activity, currFocusTime, true, false, warn)
 			msg := "+20 min on " + activity.Name
-			if activity.DDone == activity.DPoms {
-				msg = "COMPLETED: " + msg
-			} else if activity.DDone > activity.DPoms {
+			if warn {
 				msg = "OVERTIME: " + msg
+			} else if activity.DDone == activity.DPoms {
+				msg = "COMPLETED: " + msg
 			}
 			WebPush(msg)
 			log.Println("Goroutine completed at:", currFocusTime, "of", goRoutineTime, "milliseconds")
@@ -127,7 +128,7 @@ func SetCurrFocusTime(activity_id string, currFocusTime int64, increment bool) d
 // NOTE: We are passing activity as a paramter as to not have to query the database again
 // This assumes though that the activity doesn't change in the database while the timer is running
 // Should add a check for that
-func SendFocusTime(RoomID string, activity data.Activity, new_focus_time int64, trigger_start bool, trigger_stop bool) {
+func SendFocusTime(RoomID string, activity data.Activity, new_focus_time int64, trigger_start bool, trigger_stop bool, warn bool) {
 	if shared.WS_Rooms[RoomID] != nil {
 		//Send the message to all the clients in the room
 		activity.FocusTime = new_focus_time / 1000 //Convert to seconds
@@ -140,6 +141,7 @@ func SendFocusTime(RoomID string, activity data.Activity, new_focus_time int64, 
 		response.Updated_Activity = activity
 		response.TriggerStart = trigger_start
 		response.TriggerStop = trigger_stop
+		response.Warn = warn
 		//Stringify the response
 		response_string, err := json.Marshal(response)
 		if err != nil {
